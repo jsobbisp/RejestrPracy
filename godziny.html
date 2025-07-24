@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<title>Rejestracja czasu pracy</title>
+</head>
+<body>
+<h2>Wybierz projekt</h2>
+<select id="projekt">
+<option value="Projekt A">Projekt A</option>
+<option value="Projekt B">Projekt B</option>
+<option value="Projekt C">Projekt C</option>
+</select>
+
+<br><br>
+
+<button onclick="wyslijDane('START')">START</button>
+<button onclick="wyslijDane('STOP')">STOP</button>
+
+<p id="status"></p>
+
+<script>
+function getParam(name) {
+const params = new URLSearchParams(window.location.search);
+return params.get(name);
+}
+
+function wyslijDane(akcja) {
+const projekt = document.getElementById('projekt').value;
+const uzytkownik = getParam('u') || 'Nieznany';
+
+const dane = {
+id: uzytkownik,
+projekt: projekt,
+akcja: akcja
+};
+
+fetch('https://script.google.com/macros/s/AKfycbxxYEKbtelnCwT0a-EGEotMZID4FlBstsD10wQoLcJtQlTjn9OXxvekanzskHde9S6V/exec', {
+method: 'POST',
+body: JSON.stringify(dane),
+headers: {
+'Content-Type': 'application/json'
+}
+})
+.then(response => response.json())
+.then(data => {
+document.getElementById('status').innerText = data.result === 'success' ? '✅ Zapisano' : '❌ Błąd';
+})
+.catch(() => {
+document.getElementById('status').innerText = '❌ Błąd połączenia';
+});
+}
+</script>
+</body>
+</html>
