@@ -26,6 +26,10 @@ return params.get(name);
 }
 
 function wyslijDane(akcja) {
+// Dodane potwierdzenie
+const potwierdz = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę?`);
+if (!potwierdz) return;
+
 const projekt = document.getElementById('projekt').value;
 const uzytkownik = getParam('u') || 'Nieznany';
 
@@ -37,19 +41,20 @@ akcja: akcja
 
 fetch('https://script.google.com/macros/s/AKfycbzYRYEa77ipLrdRope-lPJscLfg4U5wdhJvZKy5SYIPz3PEpGhHVpdiVqfZpf3q2RW5/exec', {
 method: 'POST',
-mode: 'no-cors', // ← to wyłącza sprawdzanie CORS (konieczne przy Web App Google)
+body: JSON.stringify(dane),
 headers: {
 'Content-Type': 'application/json'
-},
-body: JSON.stringify(dane)
+}
 })
-.then(() => {
-document.getElementById('status').innerText = '✅ Dane wysłane (brak potwierdzenia)';
+.then(response => response.json())
+.then(data => {
+document.getElementById('status').innerText = data.result === 'success' ? '✅ Zapisano' : '❌ Błąd: ' + (data.message || '');
 })
-.catch(() => {
+.catch(err => {
 document.getElementById('status').innerText = '❌ Błąd połączenia';
 });
 }
 </script>
+
 </body>
 </html>
