@@ -44,9 +44,9 @@ headers: {
 })
 .then(response => response.json())
 .then(data => {
-document.getElementById('status').innerText = data.result === 'success' ? '✅ Zapisano' : '❌ Błąd';
+document.getElementById('status').innerText = data.result === 'success' ? '✅ Zapisano' : '❌ Błąd: ' + (data.message || '');
 })
-.catch(() => {
+.catch(err => {
 document.getElementById('status').innerText = '❌ Błąd połączenia';
 });
 }
