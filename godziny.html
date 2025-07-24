@@ -40,7 +40,7 @@ akcja: akcja
 
 fetch('https://script.google.com/macros/s/AKfycbzYRYEa77ipLrdRope-lPJscLfg4U5wdhJvZKy5SYIPz3PEpGhHVpdiVqfZpf3q2RW5/exec', {
 method: 'POST',
-mode: 'no-cors', // <--- bardzo ważne!
+mode: 'no-cors', // ← konieczne przy Web App Google
 headers: {
 'Content-Type': 'application/json'
 },
@@ -54,6 +54,5 @@ document.getElementById('status').innerText = '❌ Błąd połączenia';
 });
 }
 </script>
-
 </body>
 </html>
