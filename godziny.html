@@ -110,11 +110,12 @@ headers: {
 body: JSON.stringify(dane)
 })
 .then(() => {
-document.getElementById('status').innerText = '✅ Dane wysłane';
+document.getElementById('status').innerText = '✅ Dane przesłane';
 if (akcja === 'START') {
 document.getElementById('projektInfo').innerText = `Pracujesz teraz na projekcie: ${projekt}`;
 } else {
 document.getElementById('projektInfo').innerText = '';
+document.getElementyById('status').innerText = 'Zakończyłeś pracę';
 }
 })
 .catch(() => {
