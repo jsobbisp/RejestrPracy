@@ -2,76 +2,80 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Rejestracja czasu pracy</title>
 <style>
 body {
+background-color: black;
+color: orange;
+font-family: Arial, sans-serif;
+text-align: center;
 margin: 0;
 padding: 0;
-background-color: #000;
-color: #ffa500;
-font-family: Arial, sans-serif;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-height: 100vh;
-text-align: center;
 }
 
-h2 {
+.container {
+max-width: 400px;
+margin: 0 auto;
+padding: 40px 20px;
+}
+
+img.logo {
+max-width: 80%;
+height: auto;
 margin-bottom: 20px;
 }
 
-select {
-padding: 10px;
-font-size: 18px;
-border-radius: 5px;
+select, button {
+width: 100%;
+padding: 12px;
+margin: 10px 0;
+font-size: 16px;
 border: none;
-background-color: #222;
-color: #ffa500;
+border-radius: 5px;
+}
+
+select {
+background-color: #333;
+color: orange;
 }
 
 button {
-margin: 15px;
-padding: 15px 30px;
-font-size: 20px;
-background-color: #222;
-color: #ffa500;
-border: 2px solid #ffa500;
-border-radius: 8px;
-cursor: pointer;
-transition: background-color 0.3s;
-width: 80%;
-max-width: 200px;
-}
-
-button:hover {
-background-color: #444;
+background-color: orange;
+color: black;
+font-weight: bold;
 }
 
 #status {
-margin-top: 30px;
+margin-top: 20px;
+font-size: 16px;
+}
+
+.status-box {
+margin-top: 20px;
 font-size: 18px;
 font-weight: bold;
-max-width: 90%;
 }
 </style>
 </head>
 <body>
-<h2>WYBIERZ PROJEKT</h2>
+<div class="container">
+<!-- 🔽 Tutaj dodajesz swoje logo -->
+<img src="logo3.png" alt="Logo" class="logo" />
+<!-- ↑ Podmień link na swój -->
 
+<h2>Wybierz projekt</h2>
 <select id="projekt">
 <option value="Projekt A">Projekt A</option>
 <option value="Projekt B">Projekt B</option>
 <option value="Projekt C">Projekt C</option>
 </select>
 
-<button onclick="wyslijDane('START')">START</button>
-<button onclick="wyslijDane('STOP')">STOP</button>
+<button onclick="potwierdz('START')">START</button>
+<button onclick="potwierdz('STOP')">STOP</button>
 
 <p id="status"></p>
-
+<div class="status-box" id="projektInfo"></div>
+</div>
 
 <script>
 function getParam(name) {
