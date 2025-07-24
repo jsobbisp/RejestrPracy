@@ -26,7 +26,6 @@ return params.get(name);
 }
 
 function wyslijDane(akcja) {
-// Dodane potwierdzenie
 const potwierdz = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę?`);
 if (!potwierdz) return;
 
@@ -41,16 +40,16 @@ akcja: akcja
 
 fetch('https://script.google.com/macros/s/AKfycbzYRYEa77ipLrdRope-lPJscLfg4U5wdhJvZKy5SYIPz3PEpGhHVpdiVqfZpf3q2RW5/exec', {
 method: 'POST',
-body: JSON.stringify(dane),
+mode: 'no-cors', // <--- bardzo ważne!
 headers: {
 'Content-Type': 'application/json'
-}
+},
+body: JSON.stringify(dane)
 })
-.then(response => response.json())
-.then(data => {
-document.getElementById('status').innerText = data.result === 'success' ? '✅ Zapisano' : '❌ Błąd: ' + (data.message || '');
+.then(() => {
+document.getElementById('status').innerText = '✅ Dane wysłane (brak potwierdzenia)';
 })
-.catch(err => {
+.catch(() => {
 document.getElementById('status').innerText = '❌ Błąd połączenia';
 });
 }
