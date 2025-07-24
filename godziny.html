@@ -26,11 +26,14 @@ return params.get(name);
 }
 
 function wyslijDane(akcja) {
-const potwierdz = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę?`);
-if (!potwierdz) return;
-
 const projekt = document.getElementById('projekt').value;
 const uzytkownik = getParam('u') || 'Nieznany';
+
+if (akcja === 'START') {
+if (!confirm(`Czy na pewno chcesz rozpocząć pracę nad projektem "${projekt}"?`)) return;
+} else {
+if (!confirm("Czy na pewno chcesz zakończyć pracę?")) return;
+}
 
 const dane = {
 id: uzytkownik,
@@ -40,19 +43,33 @@ akcja: akcja
 
 fetch('https://script.google.com/macros/s/AKfycbzYRYEa77ipLrdRope-lPJscLfg4U5wdhJvZKy5SYIPz3PEpGhHVpdiVqfZpf3q2RW5/exec', {
 method: 'POST',
-mode: 'no-cors', // ← konieczne przy Web App Google
+mode: 'no-cors',
 headers: {
 'Content-Type': 'application/json'
 },
 body: JSON.stringify(dane)
 })
 .then(() => {
-document.getElementById('status').innerText = '✅ Dane wysłane (brak potwierdzenia)';
+if (akcja === 'START') {
+localStorage.setItem('aktywnyProjekt', projekt);
+document.getElementById('status').innerText = `✅ Pracujesz teraz na projekcie: ${projekt}`;
+} else {
+localStorage.removeItem('aktywnyProjekt');
+document.getElementById('status').innerText = `🛑 Praca zakończona`;
+}
 })
 .catch(() => {
 document.getElementById('status').innerText = '❌ Błąd połączenia';
 });
 }
+
+// Po załadowaniu strony pokaż, jeśli użytkownik ma aktywny projekt
+window.onload = function () {
+const aktywny = localStorage.getItem('aktywnyProjekt');
+if (aktywny) {
+document.getElementById('status').innerText = `✅ Pracujesz teraz na projekcie: ${aktywny}`;
+}
+};
 </script>
 </body>
 </html>
