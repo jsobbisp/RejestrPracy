@@ -83,15 +83,17 @@ const params = new URLSearchParams(window.location.search);
 return params.get(name);
 }
 
+function potwierdz(akcja) {
+const projekt = document.getElementById('projekt').value;
+const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
+if (potwierdzenie) {
+wyslijDane(akcja);
+}
+}
+
 function wyslijDane(akcja) {
 const projekt = document.getElementById('projekt').value;
 const uzytkownik = getParam('u') || 'Nieznany';
-
-if (akcja === 'START') {
-if (!confirm(`Czy na pewno chcesz rozpocząć pracę nad projektem "${projekt}"?`)) return;
-} else {
-if (!confirm("Czy na pewno chcesz zakończyć pracę?")) return;
-}
 
 const dane = {
 id: uzytkownik,
@@ -108,26 +110,17 @@ headers: {
 body: JSON.stringify(dane)
 })
 .then(() => {
+document.getElementById('status').innerText = '✅ Dane wysłane';
 if (akcja === 'START') {
-localStorage.setItem('aktywnyProjekt', projekt);
-document.getElementById('status').innerText = `✅ Pracujesz teraz na projekcie: ${projekt}`;
+document.getElementById('projektInfo').innerText = `Pracujesz teraz na projekcie: ${projekt}`;
 } else {
-localStorage.removeItem('aktywnyProjekt');
-document.getElementById('status').innerText = `🛑 Praca zakończona`;
+document.getElementById('projektInfo').innerText = '';
 }
 })
 .catch(() => {
 document.getElementById('status').innerText = '❌ Błąd połączenia';
 });
 }
-
-// Po załadowaniu strony pokaż, jeśli użytkownik ma aktywny projekt
-window.onload = function () {
-const aktywny = localStorage.getItem('aktywnyProjekt');
-if (aktywny) {
-document.getElementById('status').innerText = `✅ Pracujesz teraz na projekcie: ${aktywny}`;
-}
-};
 </script>
 </body>
 </html>
