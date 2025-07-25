@@ -60,9 +60,23 @@ margin-top: 20px;
 font-size: 18px;
 font-weight: bold;
 }
+.loader-img {
+  width: 50px;
+  height: 50px;
+  animation: obracanie 1s linear infinite;
+  margin: 20px auto;
+  display: block;
+}
+@keyframes obracanie {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
+<div id="loader" style="display: none;">
+  <img src="loader.png" alt="Ładowanie..." class"loader-img">
+</div>div>
 <div class="container">
 <img src="logo4.png" alt="Logo" class="logo" />
 <h2>Wybierz projekt</h2>
@@ -135,6 +149,10 @@ function wyslijDane(akcja) {
 const projekt = document.getElementById('projekt').value;
 const uzytkownik = getParam('u') || 'Nieznany';
 
+// Pokaż loader
+document.getElementById('loader').style.display = 'block';
+document.getElementById('status').innerText = ''; // wyczyść poprzedni status
+
 const dane = {
 id: uzytkownik,
 projekt: projekt,
@@ -150,15 +168,20 @@ headers: {
 body: JSON.stringify(dane)
 })
 .then(() => {
-document.getElementById('status').innerText = '✅ Dane przesłane';
-document.getElementById('projektInfo').innerText = akcja === 'START'
-? `Pracujesz teraz na projekcie: ${projekt}`
-: 'Zakończyłeś pracę';
+document.getElementById('status').innerText = '✅Dane przesłane';
+document.getElementById('loader').style.display = 'none'; // ukryj loader
+if (akcja === 'START') {
+document.getElementById('projektInfo').innerText = `Pracujesz teraz na projekcie: ${projekt}`;
+} else {
+document.getElementById('projektInfo').innerText = 'Zakończyłeś pracę';
+}
 })
 .catch(() => {
 document.getElementById('status').innerText = '❌ Błąd połączenia';
+document.getElementById('loader').style.display = 'none'; // ukryj loader nawet przy błędzie
 });
 }
+
 </script>
 </body>
 </html>
