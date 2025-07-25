@@ -12,19 +12,16 @@ text-align: center;
 margin: 0;
 padding: 0;
 }
-
 .container {
 max-width: 400px;
 margin: 0 auto;
 padding: 40px 20px;
 }
-
 img.logo {
 max-width: 80%;
 height: auto;
 margin-bottom: 20px;
 }
-
 select, button {
 width: 100%;
 padding: 12px;
@@ -33,12 +30,10 @@ font-size: 16px;
 border: none;
 border-radius: 5px;
 }
-
 select {
 background-color: #333;
 color: orange;
 }
-
 button {
 background-color: orange;
 color: black;
@@ -51,46 +46,58 @@ border: none;
 border-radius: 5px;
 transition: all 0.1s ease;
 }
-
-
+button:active {
+transform: scale(0.95);
+background-color: #ff9900;
+box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
+}
 #status {
 margin-top: 20px;
 font-size: 16px;
 }
-
 .status-box {
 margin-top: 20px;
 font-size: 18px;
 font-weight: bold;
 }
-button:active {
-  transform: scale (0.95);
-  background-color: #ff9900;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
-}
 </style>
 </head>
 <body>
 <div class="container">
-<!-- 🔽 Tutaj dodajesz swoje logo -->
 <img src="logo4.png" alt="Logo" class="logo" />
-<!-- ↑ Podmień link na swój -->
-
 <h2>Wybierz projekt</h2>
 <select id="projekt">
 <option value="Projekt A">Projekt A</option>
 <option value="Projekt B">Projekt B</option>
 <option value="Projekt C">Projekt C</option>
 </select>
-
 <button onclick="potwierdz('START')">START</button>
 <button onclick="potwierdz('STOP')">STOP</button>
-
 <p id="status"></p>
 <div class="status-box" id="projektInfo"></div>
 </div>
 
 <script>
+// Lista warsztatów z lokalizacją (PRZYKŁADOWE KOORDYNATY)
+const warsztaty = [
+{ nazwa: "Warsztat 1", lat: 50.464580, lon: 17.945128 },
+{ nazwa: "Warsztat 2", lat: 50.519695, lon: 18.306097 },
+{ nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
+];
+
+// Funkcja pomocnicza – liczy odległość w metrach
+function haversineDistance(lat1, lon1, lat2, lon2) {
+const R = 6371000; // promień Ziemi w metrach
+const toRad = x => x * Math.PI / 180;
+const dLat = toRad(lat2 - lat1);
+const dLon = toRad(lon2 - lon1);
+const a = Math.sin(dLat / 2) ** 2 +
+Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+Math.sin(dLon / 2) ** 2;
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+return R * c;
+}
+
 function getParam(name) {
 const params = new URLSearchParams(window.location.search);
 return params.get(name);
@@ -100,7 +107,27 @@ function potwierdz(akcja) {
 const projekt = document.getElementById('projekt').value;
 const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
 if (potwierdzenie) {
+navigator.geolocation.getCurrentPosition(
+position => {
+const userLat = position.coords.latitude;
+const userLon = position.coords.longitude;
+
+// Sprawdź odległość do każdego warsztatu
+const wZasiegu = warsztaty.some(w => {
+const dist = haversineDistance(userLat, userLon, w.lat, w.lon);
+return dist <= 500;
+});
+
+if (wZasiegu) {
 wyslijDane(akcja);
+} else {
+document.getElementById('status').innerText = '❌ Musisz być na warsztacie (max 500 m)';
+}
+},
+error => {
+document.getElementById('status').innerHTML = '❌ Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';
+}
+);
 }
 }
 
@@ -124,11 +151,9 @@ body: JSON.stringify(dane)
 })
 .then(() => {
 document.getElementById('status').innerText = '✅ Dane przesłane';
-if (akcja === 'START') {
-document.getElementById('projektInfo').innerText = `Pracujesz teraz na projekcie: ${projekt}`;
-} else {
-document.getElementById('projektInfo').innerText = 'Zakończyłeś pracę';
-} 
+document.getElementById('projektInfo').innerText = akcja === 'START'
+? `Pracujesz teraz na projekcie: ${projekt}`
+: 'Zakończyłeś pracę';
 })
 .catch(() => {
 document.getElementById('status').innerText = '❌ Błąd połączenia';
