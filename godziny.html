@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <title>Rejestracja czasu pracy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
 body {
 background-color: black;
@@ -11,27 +12,28 @@ font-family: Arial, sans-serif;
 text-align: center;
 margin: 0;
 padding: 0;
+font-size: 18px;
 }
 
 .container {
-max-width: 400px;
+max-width: 500px;
 margin: 0 auto;
-padding: 40px 20px;
+padding: 50px 20px;
 }
 
 img.logo {
-max-width: 80%;
+max-width: 90%;
 height: auto;
-margin-bottom: 20px;
+margin-bottom: 30px;
 }
 
 select, button {
 width: 100%;
-padding: 12px;
-margin: 10px 0;
-font-size: 16px;
+padding: 16px;
+margin: 12px 0;
+font-size: 18px;
 border: none;
-border-radius: 5px;
+border-radius: 6px;
 }
 
 select {
@@ -43,12 +45,6 @@ button {
 background-color: orange;
 color: black;
 font-weight: bold;
-width: 100%;
-padding: 12px;
-margin: 10px 0;
-font-size: 16px;
-border: none;
-border-radius: 5px;
 transition: all 0.1s ease;
 }
 
@@ -60,7 +56,7 @@ margin-bottom: 20px;
 }
 
 .button-row button {
-width: 100%;
+flex: 1;
 }
 
 button:active {
@@ -76,7 +72,7 @@ font-size: 16px;
 
 .status-box {
 margin-top: 20px;
-font-size: 18px;
+font-size: 20px;
 font-weight: bold;
 }
 
@@ -84,10 +80,10 @@ font-weight: bold;
 border: 6px solid #f3f3f3;
 border-top: 6px solid orange;
 border-radius: 50%;
-width: 40px;
-height: 40px;
+width: 50px;
+height: 50px;
 animation: spin 1s linear infinite;
-margin: 20px auto 0;
+margin: 30px auto 0;
 }
 
 @keyframes spin {
@@ -100,10 +96,10 @@ margin: 20px auto 0;
 <div class="container">
 <img src="logo4.png" alt="Logo" class="logo" />
 
-<!-- 🔶 Nowe przyciski do Spawalni -->
+<!-- 🔶 Przyciski do Spawalni -->
 <div class="button-row">
-<button onclick="potwierdzSpawalnia('START')">Rozpocznij pracę</button>
-<button onclick="potwierdzSpawalnia('STOP')">Zakończ pracę</button>
+<button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">Rozpocznij pracę</button>
+<button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">Zakończ pracę</button>
 </div>
 
 <h2>Wybierz projekt</h2>
@@ -113,8 +109,8 @@ margin: 20px auto 0;
 <option value="Projekt C">Projekt C</option>
 </select>
 
-<button onclick="potwierdz('START')">START</button>
-<button onclick="potwierdz('STOP')">STOP</button>
+<button id="btnStart" onclick="potwierdz('START')">START</button>
+<button id="btnStop" onclick="potwierdz('STOP')">STOP</button>
 
 <p id="status"></p>
 <div class="status-box" id="projektInfo"></div>
@@ -127,6 +123,23 @@ const warsztaty = [
 { nazwa: "Warsztat 2", lat: 50.519695, lon: 18.306097 },
 { nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
 ];
+
+const blokadaKlikniec = {};
+
+function blokujPrzycisk(id) {
+const przycisk = document.getElementById(id);
+if (przycisk.disabled) return true;
+
+przycisk.disabled = true;
+blokadaKlikniec[id] = true;
+
+setTimeout(() => {
+przycisk.disabled = false;
+blokadaKlikniec[id] = false;
+}, 15000); // 15 sekund
+
+return false;
+}
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
 const R = 6371000;
@@ -146,6 +159,9 @@ return params.get(name);
 }
 
 function potwierdz(akcja) {
+const btnId = akcja === 'START' ? 'btnStart' : 'btnStop';
+if (blokujPrzycisk(btnId)) return;
+
 const projekt = document.getElementById('projekt').value;
 const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
 if (potwierdzenie) {
@@ -153,8 +169,10 @@ sprawdzLokalizacjeIZapisz(projekt, akcja);
 }
 }
 
-// 🔶 Nowa funkcja dla "Spawalnia"
 function potwierdzSpawalnia(akcja) {
+const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
+if (blokujPrzycisk(btnId)) return;
+
 const projekt = "Spawalnia";
 const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
 if (potwierdzenie) {
@@ -176,7 +194,7 @@ return dist <= 500;
 if (wZasiegu) {
 wyslijDane(projekt, akcja);
 } else {
-document.getElementById('status').innerText = '❌Musisz być na warsztacie (max 500 m)';
+document.getElementById('status').innerText = '❌Musisz być na warsztacie';
 }
 },
 error => {
