@@ -12,16 +12,19 @@ text-align: center;
 margin: 0;
 padding: 0;
 }
+
 .container {
 max-width: 400px;
 margin: 0 auto;
 padding: 40px 20px;
 }
+
 img.logo {
 max-width: 80%;
 height: auto;
 margin-bottom: 20px;
 }
+
 select, button {
 width: 100%;
 padding: 12px;
@@ -30,10 +33,12 @@ font-size: 16px;
 border: none;
 border-radius: 5px;
 }
+
 select {
 background-color: #333;
 color: orange;
 }
+
 button {
 background-color: orange;
 color: black;
@@ -46,20 +51,35 @@ border: none;
 border-radius: 5px;
 transition: all 0.1s ease;
 }
+
+.button-row {
+display: flex;
+justify-content: space-between;
+gap: 10px;
+margin-bottom: 20px;
+}
+
+.button-row button {
+width: 100%;
+}
+
 button:active {
 transform: scale(0.95);
 background-color: #ff9900;
 box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
 }
+
 #status {
 margin-top: 20px;
 font-size: 16px;
 }
+
 .status-box {
 margin-top: 20px;
 font-size: 18px;
 font-weight: bold;
 }
+
 .spinner {
 border: 6px solid #f3f3f3;
 border-top: 6px solid orange;
@@ -74,36 +94,42 @@ margin: 20px auto 0;
 0% { transform: rotate(0deg); }
 100% { transform: rotate(360deg); }
 }
-
 </style>
 </head>
 <body>
 <div class="container">
 <img src="logo4.png" alt="Logo" class="logo" />
+
+<!-- 🔶 Nowe przyciski do Spawalni -->
+<div class="button-row">
+<button onclick="potwierdzSpawalnia('START')">Rozpocznij pracę</button>
+<button onclick="potwierdzSpawalnia('STOP')">Zakończ pracę</button>
+</div>
+
 <h2>Wybierz projekt</h2>
 <select id="projekt">
 <option value="Projekt A">Projekt A</option>
 <option value="Projekt B">Projekt B</option>
 <option value="Projekt C">Projekt C</option>
 </select>
+
 <button onclick="potwierdz('START')">START</button>
 <button onclick="potwierdz('STOP')">STOP</button>
+
 <p id="status"></p>
 <div class="status-box" id="projektInfo"></div>
 <div id="loader" class="spinner" style="display: none;"></div>
 </div>
 
 <script>
-// Lista warsztatów z lokalizacją (PRZYKŁADOWE KOORDYNATY)
 const warsztaty = [
 { nazwa: "Warsztat 1", lat: 50.464580, lon: 17.945128 },
 { nazwa: "Warsztat 2", lat: 50.519695, lon: 18.306097 },
 { nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
 ];
 
-// Funkcja pomocnicza – liczy odległość w metrach
 function haversineDistance(lat1, lon1, lat2, lon2) {
-const R = 6371000; // promień Ziemi w metrach
+const R = 6371000;
 const toRad = x => x * Math.PI / 180;
 const dLat = toRad(lat2 - lat1);
 const dLon = toRad(lon2 - lon1);
@@ -123,36 +149,46 @@ function potwierdz(akcja) {
 const projekt = document.getElementById('projekt').value;
 const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
 if (potwierdzenie) {
+sprawdzLokalizacjeIZapisz(projekt, akcja);
+}
+}
+
+// 🔶 Nowa funkcja dla "Spawalnia"
+function potwierdzSpawalnia(akcja) {
+const projekt = "Spawalnia";
+const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
+if (potwierdzenie) {
+sprawdzLokalizacjeIZapisz(projekt, akcja);
+}
+}
+
+function sprawdzLokalizacjeIZapisz(projekt, akcja) {
 navigator.geolocation.getCurrentPosition(
 position => {
 const userLat = position.coords.latitude;
 const userLon = position.coords.longitude;
 
-// Sprawdź odległość do każdego warsztatu
 const wZasiegu = warsztaty.some(w => {
 const dist = haversineDistance(userLat, userLon, w.lat, w.lon);
 return dist <= 500;
 });
 
 if (wZasiegu) {
-wyslijDane(akcja);
+wyslijDane(projekt, akcja);
 } else {
-document.getElementById('status').innerText = '❌ Musisz być na warsztacie (max 500 m)';
+document.getElementById('status').innerText = '❌Musisz być na warsztacie (max 500 m)';
 }
 },
 error => {
-document.getElementById('status').innerHTML = '❌ Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';
+document.getElementById('status').innerHTML = '❌Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';
 }
 );
 }
-}
 
-function wyslijDane(akcja) {
-const projekt = document.getElementById('projekt').value;
+function wyslijDane(projekt, akcja) {
 const uzytkownik = getParam('u') || 'Nieznany';
-
 document.getElementById('loader').style.display = 'block';
-  
+
 const dane = {
 id: uzytkownik,
 projekt: projekt,
@@ -168,15 +204,16 @@ headers: {
 body: JSON.stringify(dane)
 })
 .then(() => {
-document.getElementById('loader').style.display = 'none'
-document.getElementById('status').innerText = '✅ Dane przesłane';
-document.getElementById('projektInfo').innerText = akcja === 'START'
+document.getElementById('loader').style.display = 'none';
+document.getElementById('status').innerText = '✅Dane przesłane';
+document.getElementById('projektInfo').innerText =
+akcja === 'START'
 ? `Pracujesz teraz na projekcie: ${projekt}`
 : 'Zakończyłeś pracę';
 })
 .catch(() => {
-document.getElementById('loader').style.display = 'none'
-document.getElementById('status').innerText = '❌ Błąd połączenia';
+document.getElementById('loader').style.display = 'none';
+document.getElementById('status').innerText = '❌Błąd połączenia';
 });
 }
 </script>
