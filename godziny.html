@@ -104,15 +104,19 @@ margin: 30px auto 0;
 
 <!-- 🔶 Przyciski do Spawalni -->
 <div class="button-row">
-<button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">Rozpocznij pracę</button>
-<button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">Zakończ pracę</button>
+<button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">ROZPOCZNIJ PRACĘ</button>
+<button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">ZAKOŃĆZ    PRACĘ</button>
 </div>
 
-<h2>Wybierz projekt</h2>
+<h2>WYBIERZ PROJEKT</h2>
 <select id="projekt">
-<option value="Projekt A">Projekt A</option>
-<option value="Projekt B">Projekt B</option>
-<option value="Projekt C">Projekt C</option>
+<option value="Projekt A">WP41 - 241011008</option>
+<option value="Projekt B">M3 - 241011006</option>
+<option value="Projekt C">Area C - 241011011</option>
+<option value="Projekt C">PGI Izolacja - 241011012</option>
+<option value="Projekt C">Lilly - 251011005</option>
+<option value="Projekt C">PGI Zbiornik - 251011002</option>
+<option value="Projekt C">PGI Wyspa - 251011003</option>
 </select>
 
 <button id="btnStart" onclick="potwierdz('START')">START</button>
@@ -200,11 +204,11 @@ return dist <= 500;
 if (wZasiegu) {
 wyslijDane(projekt, akcja);
 } else {
-document.getElementById('status').innerText = '❌Musisz być na warsztacie';
+document.getElementById('status').innerText = '❌ Musisz być na warsztacie';
 }
 },
 error => {
-document.getElementById('status').innerHTML = '❌Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';
+document.getElementById('status').innerHTML = '❌ Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';
 }
 );
 }
@@ -229,7 +233,7 @@ body: JSON.stringify(dane)
 })
 .then(() => {
 document.getElementById('loader').style.display = 'none';
-document.getElementById('status').innerText = '✅Dane przesłane';
+document.getElementById('status').innerText = '✅ DANE PRZESŁANE';
 document.getElementById('projektInfo').innerText =
 akcja === 'START'
 ? `Pracujesz teraz na projekcie: ${projekt}`
@@ -237,7 +241,7 @@ akcja === 'START'
 })
 .catch(() => {
 document.getElementById('loader').style.display = 'none';
-document.getElementById('status').innerText = '❌Błąd połączenia';
+document.getElementById('status').innerText = '❌ BŁĄD POŁĄCZENIA';
 });
 }
 </script>
