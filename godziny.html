@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+<meta charset="UTF-8" />
+<title>Rejestracja czasu pracy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- 🔓 Content Security Policy do fetch na Google Apps Script i inline JS/CSS -->
 <meta http-equiv="Content-Security-Policy" content="
 default-src 'self'; 
 connect-src 'self' https://script.google.com; 
@@ -8,34 +13,106 @@ style-src 'self' 'unsafe-inline';
 script-src 'self' 'unsafe-inline';
 ">
 
-<title>Rejestracja czasu pracy</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<!-- 🔓 Content Security Policy do fetch na script.google.com -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://script.google.com;">
-
 <style>
+body {
+background-color: black;
+color: orange;
+font-family: Arial, sans-serif;
+text-align: center;
+margin: 0;
+padding: 0;
+font-size: 18px;
+}
 
-body { background-color: black; color: orange; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; font-size: 18px; }
-.container { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-height: 100vh; padding: 20px 20px 1000px; text-align: center; transform: scale(0.75) translateY(-10vh); transform-origin: top center; }
-img.logo { max-width: 90%; height: auto; margin-bottom: 30px; }
-select, button { width: 100%; padding: 16px; margin: 12px 0; font-size: 18px; border: none; border-radius: 6px; }
-select { background-color: #333; color: orange; }
-button { background-color: orange; color: black; font-weight: bold; transition: all 0.1s ease; }
-.button-row { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
-.button-row button { flex: 1; }
-button:active { transform: scale(0.95); background-color: #ff9900; box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset; }
-#status { margin-top: 20px; font-size: 16px; }
-.status-box { margin-top: 20px; font-size: 20px; font-weight: bold; }
-.spinner { border: 6px solid #f3f3f3; border-top: 6px solid orange; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 30px auto 0; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.container {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-end;
+min-height: 100vh;
+padding: 20px 20px 1000px;
+text-align: center;
+transform: scale(0.75) translateY(-10vh);
+transform-origin: top center;
+}
+
+img.logo {
+max-width: 90%;
+height: auto;
+margin-bottom: 30px;
+}
+
+select, button {
+width: 100%;
+padding: 16px;
+margin: 12px 0;
+font-size: 18px;
+border: none;
+border-radius: 6px;
+}
+
+select {
+background-color: #333;
+color: orange;
+}
+
+button {
+background-color: orange;
+color: black;
+font-weight: bold;
+transition: all 0.1s ease;
+}
+
+.button-row {
+display: flex;
+justify-content: space-between;
+gap: 10px;
+margin-bottom: 20px;
+}
+
+.button-row button {
+flex: 1;
+}
+
+button:active {
+transform: scale(0.95);
+background-color: #ff9900;
+box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
+}
+
+#status {
+margin-top: 20px;
+font-size: 16px;
+}
+
+.status-box {
+margin-top: 20px;
+font-size: 20px;
+font-weight: bold;
+}
+
+.spinner {
+border: 6px solid #f3f3f3;
+border-top: 6px solid orange;
+border-radius: 50%;
+width: 50px;
+height: 50px;
+animation: spin 1s linear infinite;
+margin: 30px auto 0;
+}
+
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
 </style>
 </head>
 <body>
 <div class="container">
 <img src="logo4.png" alt="Logo" class="logo" />
 
-<div class="button-row" id="spawalniaButtons">
+<!-- 🔶 Przyciski do Spawalni -->
+<div class="button-row">
 <button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">ROZPOCZNIJ PRACĘ</button>
 <button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">ZAKOŃCZ PRACĘ</button>
 </div>
@@ -51,7 +128,7 @@ button:active { transform: scale(0.95); background-color: #ff9900; box-shadow: 0
 <option value="PGI Wyspa - 251011003">PGI Wyspa - 251011003</option>
 </select>
 
-<div id="projectButtons">
+<div class="button-row">
 <button id="btnStart" onclick="potwierdz('START')">START</button>
 <button id="btnStop" onclick="potwierdz('STOP')">STOP</button>
 <button id="btnStopAll" onclick="zakonczWszystko()">STOP i ZAKOŃCZ PRACĘ</button>
@@ -63,14 +140,34 @@ button:active { transform: scale(0.95); background-color: #ff9900; box-shadow: 0
 </div>
 
 <script>
-// wklej tutaj URL swojego Web App Apps Script
+// 🔹 Wklej tutaj URL swojego Web App Apps Script
 const BASE_URL = "https://script.google.com/macros/s/AKfycbx9itwlnD-0udyYtF9enDcnSoDeZGmWPNdsJ2CiUl4AxCI79bKDbZqfhu8I5s9YtR6A/exec";
 
-function getParam(name) {
+// warsztaty
+const warsztaty = [
+{ nazwa: "Warsztat 1", lat: 50.464580, lon: 17.945128 },
+{ nazwa: "Warsztat 2", lat: 50.519695, lon: 18.306097 },
+{ nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
+];
+
+// blokada kliknięć
+const blokadaKlikniec = {};
+function blokujPrzycisk(id) {
+const przycisk = document.getElementById(id);
+if(przycisk.disabled) return true;
+przycisk.disabled = true;
+blokadaKlikniec[id]=true;
+setTimeout(()=>{przycisk.disabled=false; blokadaKlikniec[id]=false;},15000);
+return false;
+}
+
+// parametry URL
+function getParam(name){
 return new URLSearchParams(window.location.search).get(name);
 }
 
-async function pobierzStatus() {
+// status z Web App
+async function pobierzStatus(){
 const id = getParam('u') || 'Nieznany';
 try {
 const resp = await fetch(`${BASE_URL}?u=${id}`);
@@ -86,33 +183,25 @@ document.getElementById('status').innerText='❌BŁĄD POŁĄCZENIA';
 }
 }
 
+// wysyłanie danych
 async function wyslijDane(projekt, akcja){
 const id = getParam('u') || 'Nieznany';
 document.getElementById('loader').style.display='block';
-try {
-await fetch(`${BASE_URL}?u=${id}`, {
+try{
+await fetch(`${BASE_URL}?u=${id}`,{
 method:'POST',
 body: JSON.stringify({id, projekt, akcja}),
 headers:{'Content-Type':'application/json'}
 });
 document.getElementById('loader').style.display='none';
 pobierzStatus();
-} catch(e){
+}catch(e){
 document.getElementById('loader').style.display='none';
 document.getElementById('status').innerText='❌BŁĄD POŁĄCZENIA';
 }
 }
 
-const blokadaKlikniec = {};
-function blokujPrzycisk(id) {
-const przycisk = document.getElementById(id);
-if (przycisk.disabled) return true;
-przycisk.disabled = true;
-blokadaKlikniec[id] = true;
-setTimeout(()=>{ przycisk.disabled=false; blokadaKlikniec[id]=false; },15000);
-return false;
-}
-
+// START/STOP Projekt
 function potwierdz(akcja){
 const btnId = akcja==='START'?'btnStart':'btnStop';
 if(blokujPrzycisk(btnId)) return;
@@ -123,6 +212,7 @@ wyslijDane(projekt, akcja);
 }
 }
 
+// START/STOP Spawalnia
 function potwierdzSpawalnia(akcja){
 const btnId = akcja==='START'?'btnSpawalniaStart':'btnSpawalniaStop';
 if(blokujPrzycisk(btnId)) return;
@@ -132,6 +222,7 @@ wyslijDane(projekt, akcja);
 }
 }
 
+// STOP i ZAKOŃCZ WSZYSTKO
 function zakonczWszystko(){
 const aktywny = localStorage.getItem('aktywnyProjekt');
 if(!aktywny) return alert('Nie ma aktywnego projektu!');
@@ -141,6 +232,7 @@ wyslijDane('Spawalnia','STOP');
 }
 }
 
+// aktualizacja UI
 function aktualizujUI(){
 const spawalnia = localStorage.getItem('spawalnia');
 const aktywny = localStorage.getItem('aktywnyProjekt');
@@ -156,6 +248,3 @@ pobierzStatus();
 </script>
 </body>
 </html>
-
-
-
