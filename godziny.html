@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://script.google.com;">
+<meta charset="UTF-8" />
 <title>Rejestracja czasu pracy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- 🔓 Content Security Policy do fetch na script.google.com -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://script.google.com;">
+
 <style>
+
 body { background-color: black; color: orange; font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; font-size: 18px; }
 .container { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-height: 100vh; padding: 20px 20px 1000px; text-align: center; transform: scale(0.75) translateY(-10vh); transform-origin: top center; }
 img.logo { max-width: 90%; height: auto; margin-bottom: 30px; }
@@ -145,4 +150,5 @@ pobierzStatus();
 </script>
 </body>
 </html>
+
 
