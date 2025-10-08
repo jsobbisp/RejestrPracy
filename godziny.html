@@ -52,9 +52,9 @@ button:active { transform: scale(0.95); background-color: #ff9900; box-shadow: 0
 </div>
 
 <script>
-const BASE_URL = "https://script.google.com/macros/s/AKfycbx9itwlnD-0udyYtF9enDcnSoDeZGmWPNdsJ2CiUl4AxCI79bKDbZqfhu8I5s9YtR6A/exec"; // <-- wklej URL Web App Apps Script
+// wklej tutaj URL swojego Web App Apps Script
+const BASE_URL = "https://script.google.com/macros/s/AKfycbx9itwlnD-0udyYtF9enDcnSoDeZGmWPNdsJ2CiUl4AxCI79bKDbZqfhu8I5s9YtR6A/exec";
 
-// Pomocnicze
 function getParam(name) {
 return new URLSearchParams(window.location.search).get(name);
 }
@@ -69,27 +69,29 @@ localStorage.removeItem('aktywnyProjekt');
 if(status.Spawalnia) localStorage.setItem('spawalnia','true');
 if(status.AktywnyProjekt) localStorage.setItem('aktywnyProjekt', status.AktywnyProjekt);
 aktualizujUI();
-} catch(e){ console.error(e); }
+} catch(e){
+console.error(e);
+document.getElementById('status').innerText='❌BŁĄD POŁĄCZENIA';
+}
 }
 
 async function wyslijDane(projekt, akcja){
 const id = getParam('u') || 'Nieznany';
 document.getElementById('loader').style.display='block';
 try {
-await fetch(BASE_URL,{
+await fetch(`${BASE_URL}?u=${id}`, {
 method:'POST',
 body: JSON.stringify({id, projekt, akcja}),
 headers:{'Content-Type':'application/json'}
 });
 document.getElementById('loader').style.display='none';
-pobierzStatus(); // odśwież status po akcji
+pobierzStatus();
 } catch(e){
 document.getElementById('loader').style.display='none';
 document.getElementById('status').innerText='❌BŁĄD POŁĄCZENIA';
 }
 }
 
-// Blokada kliknięć
 const blokadaKlikniec = {};
 function blokujPrzycisk(id) {
 const przycisk = document.getElementById(id);
@@ -100,7 +102,6 @@ setTimeout(()=>{ przycisk.disabled=false; blokadaKlikniec[id]=false; },15000);
 return false;
 }
 
-// START/STOP Projekt
 function potwierdz(akcja){
 const btnId = akcja==='START'?'btnStart':'btnStop';
 if(blokujPrzycisk(btnId)) return;
@@ -111,7 +112,6 @@ wyslijDane(projekt, akcja);
 }
 }
 
-// START/STOP Spawalnia
 function potwierdzSpawalnia(akcja){
 const btnId = akcja==='START'?'btnSpawalniaStart':'btnSpawalniaStop';
 if(blokujPrzycisk(btnId)) return;
@@ -121,7 +121,6 @@ wyslijDane(projekt, akcja);
 }
 }
 
-// STOP i ZAKOŃCZ PRACĘ
 function zakonczWszystko(){
 const aktywny = localStorage.getItem('aktywnyProjekt');
 if(!aktywny) return alert('Nie ma aktywnego projektu!');
@@ -131,7 +130,6 @@ wyslijDane('Spawalnia','STOP');
 }
 }
 
-// Aktualizacja UI
 function aktualizujUI(){
 const spawalnia = localStorage.getItem('spawalnia');
 const aktywny = localStorage.getItem('aktywnyProjekt');
@@ -142,7 +140,7 @@ document.getElementById('btnStopAll').style.display = spawalnia?'inline-block':'
 document.getElementById('projektInfo').innerText = aktywny?`🔸 Obecnie pracujesz na projekcie: ${aktywny}`:spawalnia?'🔸 Spawalnia aktywna':'';
 }
 
-// inicjalizacja
+// start
 pobierzStatus();
 </script>
 </body>
