@@ -4,15 +4,6 @@
 <meta charset="UTF-8" />
 <title>Rejestracja czasu pracy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-<!-- 🔓 Content Security Policy do fetch na Google Apps Script i inline JS/CSS -->
-<meta http-equiv="Content-Security-Policy" content="
-default-src 'self'; 
-connect-src 'self' https://script.google.com; 
-style-src 'self' 'unsafe-inline'; 
-script-src 'self' 'unsafe-inline';
-">
-
 <style>
 body {
 background-color: black;
@@ -23,7 +14,6 @@ margin: 0;
 padding: 0;
 font-size: 18px;
 }
-
 .container {
 display: flex;
 flex-direction: column;
@@ -35,13 +25,11 @@ text-align: center;
 transform: scale(0.75) translateY(-10vh);
 transform-origin: top center;
 }
-
 img.logo {
 max-width: 90%;
 height: auto;
 margin-bottom: 30px;
 }
-
 select, button {
 width: 100%;
 padding: 16px;
@@ -50,47 +38,27 @@ font-size: 18px;
 border: none;
 border-radius: 6px;
 }
-
-select {
-background-color: #333;
-color: orange;
-}
-
+select { background-color: #333; color: orange; }
 button {
 background-color: orange;
 color: black;
 font-weight: bold;
 transition: all 0.1s ease;
 }
-
 .button-row {
 display: flex;
 justify-content: space-between;
 gap: 10px;
 margin-bottom: 20px;
 }
-
-.button-row button {
-flex: 1;
-}
-
+.button-row button { flex: 1; }
 button:active {
 transform: scale(0.95);
 background-color: #ff9900;
 box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
 }
-
-#status {
-margin-top: 20px;
-font-size: 16px;
-}
-
-.status-box {
-margin-top: 20px;
-font-size: 20px;
-font-weight: bold;
-}
-
+#status { margin-top: 20px; font-size: 16px; }
+.status-box { margin-top: 20px; font-size: 20px; font-weight: bold; }
 .spinner {
 border: 6px solid #f3f3f3;
 border-top: 6px solid orange;
@@ -100,19 +68,14 @@ height: 50px;
 animation: spin 1s linear infinite;
 margin: 30px auto 0;
 }
-
-@keyframes spin {
-0% { transform: rotate(0deg); }
-100% { transform: rotate(360deg); }
-}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 <div class="container">
 <img src="logo4.png" alt="Logo" class="logo" />
 
-<!-- 🔶 Przyciski do Spawalni -->
-<div class="button-row">
+<div class="button-row" id="spawalniaButtons">
 <button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">ROZPOCZNIJ PRACĘ</button>
 <button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">ZAKOŃCZ PRACĘ</button>
 </div>
@@ -128,7 +91,7 @@ margin: 30px auto 0;
 <option value="PGI Wyspa - 251011003">PGI Wyspa - 251011003</option>
 </select>
 
-<div class="button-row">
+<div id="projectButtons">
 <button id="btnStart" onclick="potwierdz('START')">START</button>
 <button id="btnStop" onclick="potwierdz('STOP')">STOP</button>
 <button id="btnStopAll" onclick="zakonczWszystko()">STOP i ZAKOŃCZ PRACĘ</button>
@@ -140,36 +103,26 @@ margin: 30px auto 0;
 </div>
 
 <script>
-// 🔹 Wklej tutaj URL swojego Web App Apps Script
-const BASE_URL = "https://script.google.com/macros/s/AKfycbx9itwlnD-0udyYtF9enDcnSoDeZGmWPNdsJ2CiUl4AxCI79bKDbZqfhu8I5s9YtR6A/exec";
+const BASE_URL = "https://script.google.com/macros/s/AKfycby_JU37bdp8D4r9L3Lxa2OzeLja-zln_mFkSZxQ4ws2vluMdFgae4GprzF0gwOuRJw/exec"; // wklej URL Web App Apps Script
 
-// warsztaty
-const warsztaty = [
-{ nazwa: "Warsztat 1", lat: 50.464580, lon: 17.945128 },
-{ nazwa: "Warsztat 2", lat: 50.519695, lon: 18.306097 },
-{ nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
-];
-
-// blokada kliknięć
 const blokadaKlikniec = {};
 function blokujPrzycisk(id) {
-const przycisk = document.getElementById(id);
-if(przycisk.disabled) return true;
-przycisk.disabled = true;
-blokadaKlikniec[id]=true;
-setTimeout(()=>{przycisk.disabled=false; blokadaKlikniec[id]=false;},15000);
+const btn = document.getElementById(id);
+if(btn.disabled) return true;
+btn.disabled = true;
+blokadaKlikniec[id] = true;
+setTimeout(()=>{ btn.disabled=false; blokadaKlikniec[id]=false; },15000);
 return false;
 }
 
-// parametry URL
-function getParam(name){
+function getParam(name) {
 return new URLSearchParams(window.location.search).get(name);
 }
 
-// status z Web App
+// pobierz status użytkownika i ustaw UI
 async function pobierzStatus(){
 const id = getParam('u') || 'Nieznany';
-try {
+try{
 const resp = await fetch(`${BASE_URL}?u=${id}`);
 const status = await resp.json();
 localStorage.removeItem('spawalnia');
@@ -183,25 +136,25 @@ document.getElementById('status').innerText='❌BŁĄD POŁĄCZENIA';
 }
 }
 
-// wysyłanie danych
 async function wyslijDane(projekt, akcja){
 const id = getParam('u') || 'Nieznany';
 document.getElementById('loader').style.display='block';
 try{
-await fetch(`${BASE_URL}?u=${id}`,{
+const resp = await fetch(BASE_URL, {
 method:'POST',
-body: JSON.stringify({id, projekt, akcja}),
-headers:{'Content-Type':'application/json'}
+headers:{'Content-Type':'application/json'},
+body: JSON.stringify({id, projekt, akcja})
 });
+const json = await resp.json();
 document.getElementById('loader').style.display='none';
 pobierzStatus();
-}catch(e){
+} catch(e){
 document.getElementById('loader').style.display='none';
 document.getElementById('status').innerText='❌BŁĄD POŁĄCZENIA';
 }
 }
 
-// START/STOP Projekt
+// START/STOP projektu
 function potwierdz(akcja){
 const btnId = akcja==='START'?'btnStart':'btnStop';
 if(blokujPrzycisk(btnId)) return;
@@ -212,7 +165,7 @@ wyslijDane(projekt, akcja);
 }
 }
 
-// START/STOP Spawalnia
+// START/STOP spawalni
 function potwierdzSpawalnia(akcja){
 const btnId = akcja==='START'?'btnSpawalniaStart':'btnSpawalniaStop';
 if(blokujPrzycisk(btnId)) return;
@@ -222,7 +175,7 @@ wyslijDane(projekt, akcja);
 }
 }
 
-// STOP i ZAKOŃCZ WSZYSTKO
+// STOP wszystko
 function zakonczWszystko(){
 const aktywny = localStorage.getItem('aktywnyProjekt');
 if(!aktywny) return alert('Nie ma aktywnego projektu!');
