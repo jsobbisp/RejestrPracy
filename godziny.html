@@ -150,10 +150,11 @@ const warsztaty = [
   { nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
 ];
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbxOJbDFtvAF1h_jh-xikH2TFy25ZDI3mmNNPIR50HdKfd6dnupfi58tnWxdVieEio0/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyUi6ydgKWvOUwCzpRM33-h8XEzmP3tQ4IWYZ5gWmKcA8RB2k2581olflySwes3NSXI/exec';
 
 let spawalniaActive = false;
 let activeProject = "";
+let manualLoading = false;
 
 function getParam(name) {
   const params = new URLSearchParams(window.location.search);
@@ -197,7 +198,7 @@ function showStatus() {
 
 // Pobiera status z serwera i odświeża widoczność elementów
 async function fetchStatusAndUpdate(showSpinner = false) {
-  if (showSpinner) showLoading(true);
+  if (showSpinner || manualLoading) showLoading(true);
   const userId = getParam('u') || 'Nieznany';
   try {
     const res = await fetch(API_URL + `?userId=${encodeURIComponent(userId)}`);
@@ -205,17 +206,20 @@ async function fetchStatusAndUpdate(showSpinner = false) {
     spawalniaActive = !!status.spawalniaActive;
     activeProject = status.activeProject || "";
     showStatus();
-    if (showSpinner) showLoading(false);
+    showLoading(false);
+    manualLoading = false;
   } catch (e) {
     document.getElementById('status').innerText = '❌ Błąd pobierania statusu';
-    if (showSpinner) showLoading(false);
+    showLoading(false);
+    manualLoading = false;
   }
 }
 
 // Odświeżaj status co X sekund (bez spinnera)
 window.onload = () => {
-  fetchStatusAndUpdate(true); // spinner na wejściu
-  setInterval(() => fetchStatusAndUpdate(false), 10000); // co 10 sekund bez spinnera
+  manualLoading = true;
+  fetchStatusAndUpdate(true);
+  setInterval(() => fetchStatusAndUpdate(false), 10000); // co 10 sekund
 };
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -230,6 +234,7 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
+// Dodaj callback do sprawdzLokalizacjeIZapisz
 function sprawdzLokalizacjeIZapisz(projekt, akcja, callback) {
   showLoading(true);
   navigator.geolocation.getCurrentPosition(
@@ -241,7 +246,7 @@ function sprawdzLokalizacjeIZapisz(projekt, akcja, callback) {
         return dist <= 500;
       });
       if (wZasiegu) {
-        callback();
+        wyslijDane(projekt, akcja, callback);
       } else {
         showLoading(false);
         document.getElementById('status').innerText = '❌ Musisz być na warsztacie';
@@ -254,56 +259,8 @@ function sprawdzLokalizacjeIZapisz(projekt, akcja, callback) {
   );
 }
 
-function potwierdz(akcja) {
-  const btnId = akcja === 'START' ? 'btnStart' : 'btnStop';
-  if (blokujPrzycisk(btnId)) return;
-  let projekt;
-  if (akcja === 'START') {
-    projekt = document.getElementById('projekt').value;
-    const potwierdzenie = confirm(`Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?`);
-    if (potwierdzenie) {
-      sprawdzLokalizacjeIZapisz(projekt, 'START', () => {
-        wyslijDane(projekt, 'START');
-      });
-    }
-  } else {
-    projekt = activeProject;
-    const potwierdzenie = confirm(`Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?`);
-    if (potwierdzenie) {
-      sprawdzLokalizacjeIZapisz(projekt, 'STOP', () => {
-        wyslijDane(projekt, 'STOP');
-      });
-    }
-  }
-}
-
-function potwierdzSpawalnia(akcja) {
-  const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
-  if (blokujPrzycisk(btnId)) return;
-  const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
-  if (potwierdzenie) {
-    if (akcja === 'START') {
-      sprawdzLokalizacjeIZapisz("Spawalnia", 'START', () => {
-        wyslijDane("Spawalnia", 'START');
-      });
-    } else {
-      // STOP Spawalnia: jeśli podprojekt, kończ oba
-      if (activeProject) {
-        sprawdzLokalizacjeIZapisz("Spawalnia", 'STOP', async () => {
-          await wyslijDane(activeProject, 'STOP');
-          await wyslijDane("Spawalnia", 'STOP');
-        });
-      } else {
-        sprawdzLokalizacjeIZapisz("Spawalnia", 'STOP', () => {
-          wyslijDane("Spawalnia", 'STOP');
-        });
-      }
-    }
-  }
-}
-
-// Wysyłanie danych do serwera
-async function wyslijDane(projekt, akcja) {
+// Dodaj callback do wyslijDane
+async function wyslijDane(projekt, akcja, callback) {
   const uzytkownik = getParam('u') || 'Nieznany';
   try {
     const dane = { id: uzytkownik, projekt, akcja };
@@ -314,10 +271,55 @@ async function wyslijDane(projekt, akcja) {
       body: JSON.stringify(dane)
     });
     document.getElementById('status').innerText = '✅ DANE PRZESŁANE';
-    await fetchStatusAndUpdate(true); // status odczytaj przez GET po zapisie, z spinnerem
+    if (typeof callback === 'function') {
+      callback();
+    } else {
+      manualLoading = true;
+      await fetchStatusAndUpdate(true); // status odczytaj przez GET po zapisie
+    }
   } catch (e) {
     showLoading(false);
     document.getElementById('status').innerText = '❌ BŁĄD POŁĄCZENIA';
+  }
+}
+
+// START/STOP PROJEKTU
+function potwierdz(akcja) {
+  const btnId = akcja === 'START' ? 'btnStart' : 'btnStop';
+  if (blokujPrzycisk(btnId)) return;
+  let projekt;
+  if (akcja === 'START') {
+    projekt = document.getElementById('projekt').value;
+    const potwierdzenie = confirm(`Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?`);
+    if (potwierdzenie) {
+      manualLoading = true;
+      sprawdzLokalizacjeIZapisz(projekt, 'START');
+    }
+  } else {
+    projekt = activeProject;
+    const potwierdzenie = confirm(`Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?`);
+    if (potwierdzenie) {
+      manualLoading = true;
+      sprawdzLokalizacjeIZapisz(projekt, 'STOP');
+    }
+  }
+}
+
+// ZAKOŃCZ PRACĘ (STOP SPAWALNIA + opcjonalnie STOP podprojekt)
+function potwierdzSpawalnia(akcja) {
+  const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
+  if (blokujPrzycisk(btnId)) return;
+  const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
+  if (potwierdzenie) {
+    manualLoading = true;
+    if (akcja === 'STOP' && activeProject) {
+      // najpierw STOP podprojekt, potem STOP spawalnia
+      sprawdzLokalizacjeIZapisz(activeProject, 'STOP', () => {
+        sprawdzLokalizacjeIZapisz("Spawalnia", 'STOP');
+      });
+    } else {
+      sprawdzLokalizacjeIZapisz("Spawalnia", akcja);
+    }
   }
 }
 </script>
