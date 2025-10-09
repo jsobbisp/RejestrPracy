@@ -214,7 +214,7 @@ async function fetchStatusAndUpdate(showSpinner = false) {
 
 // Odświeżaj status co X sekund (bez spinnera)
 window.onload = () => {
-  fetchStatusAndUpdate(true); // spinner tylko przy wejściu
+  fetchStatusAndUpdate(true); // spinner na wejściu
   setInterval(() => fetchStatusAndUpdate(false), 10000); // co 10 sekund bez spinnera
 };
 
@@ -230,16 +230,7 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-// Funkcja do wysyłania wielu prac (np. STOP Spawalnia + STOP Projekt)
-async function wyslijWieleDanych(prace) {
-  for (let i = 0; i < prace.length; i++) {
-    const { projekt, akcja } = prace[i];
-    await wyslijDane(projekt, akcja, i === 0); // spinner tylko przy pierwszym
-  }
-  await fetchStatusAndUpdate(true);
-}
-
-function sprawdzLokalizacjeIZapisz(projekt, akcja, multi = false) {
+function sprawdzLokalizacjeIZapisz(projekt, akcja, callback) {
   showLoading(true);
   navigator.geolocation.getCurrentPosition(
     position => {
@@ -250,14 +241,7 @@ function sprawdzLokalizacjeIZapisz(projekt, akcja, multi = false) {
         return dist <= 500;
       });
       if (wZasiegu) {
-        if (multi) {
-          wyslijWieleDanych([
-            { projekt: "Spawalnia", akcja: "STOP" },
-            { projekt: activeProject, akcja: "STOP" }
-          ]);
-        } else {
-          wyslijDane(projekt, akcja, true);
-        }
+        callback();
       } else {
         showLoading(false);
         document.getElementById('status').innerText = '❌ Musisz być na warsztacie';
@@ -277,28 +261,49 @@ function potwierdz(akcja) {
   if (akcja === 'START') {
     projekt = document.getElementById('projekt').value;
     const potwierdzenie = confirm(`Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?`);
-    if (potwierdzenie) sprawdzLokalizacjeIZapisz(projekt, 'START');
+    if (potwierdzenie) {
+      sprawdzLokalizacjeIZapisz(projekt, 'START', () => {
+        wyslijDane(projekt, 'START');
+      });
+    }
   } else {
     projekt = activeProject;
     const potwierdzenie = confirm(`Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?`);
-    if (potwierdzenie) sprawdzLokalizacjeIZapisz(projekt, 'STOP');
+    if (potwierdzenie) {
+      sprawdzLokalizacjeIZapisz(projekt, 'STOP', () => {
+        wyslijDane(projekt, 'STOP');
+      });
+    }
   }
 }
 
-// Zakończ pracę: jeśli jest podprojekt, zakończ oba
 function potwierdzSpawalnia(akcja) {
   const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
   if (blokujPrzycisk(btnId)) return;
-  if (akcja === 'STOP' && activeProject) {
-    const potwierdzenie = confirm(`Czy na pewno chcesz zakończyć pracę na Spawalni i projekcie "${activeProject}"?`);
-    if (potwierdzenie) sprawdzLokalizacjeIZapisz(null, null, true);
-  } else {
-    const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
-    if (potwierdzenie) sprawdzLokalizacjeIZapisz("Spawalnia", akcja);
+  const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
+  if (potwierdzenie) {
+    if (akcja === 'START') {
+      sprawdzLokalizacjeIZapisz("Spawalnia", 'START', () => {
+        wyslijDane("Spawalnia", 'START');
+      });
+    } else {
+      // STOP Spawalnia: jeśli podprojekt, kończ oba
+      if (activeProject) {
+        sprawdzLokalizacjeIZapisz("Spawalnia", 'STOP', async () => {
+          await wyslijDane(activeProject, 'STOP');
+          await wyslijDane("Spawalnia", 'STOP');
+        });
+      } else {
+        sprawdzLokalizacjeIZapisz("Spawalnia", 'STOP', () => {
+          wyslijDane("Spawalnia", 'STOP');
+        });
+      }
+    }
   }
 }
 
-async function wyslijDane(projekt, akcja, showSpinner) {
+// Wysyłanie danych do serwera
+async function wyslijDane(projekt, akcja) {
   const uzytkownik = getParam('u') || 'Nieznany';
   try {
     const dane = { id: uzytkownik, projekt, akcja };
@@ -309,8 +314,7 @@ async function wyslijDane(projekt, akcja, showSpinner) {
       body: JSON.stringify(dane)
     });
     document.getElementById('status').innerText = '✅ DANE PRZESŁANE';
-    if (showSpinner) await fetchStatusAndUpdate(true); // odczytaj status po zapisie ze spinnerem
-    else await fetchStatusAndUpdate(false);
+    await fetchStatusAndUpdate(true); // status odczytaj przez GET po zapisie, z spinnerem
   } catch (e) {
     showLoading(false);
     document.getElementById('status').innerText = '❌ BŁĄD POŁĄCZENIA';
