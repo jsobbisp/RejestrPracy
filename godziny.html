@@ -196,8 +196,8 @@ function showStatus() {
 }
 
 // Pobiera status z serwera i odświeża widoczność elementów
-async function fetchStatusAndUpdate() {
-  showLoading(true);
+async function fetchStatusAndUpdate(showSpinner = false) {
+  if (showSpinner) showLoading(true);
   const userId = getParam('u') || 'Nieznany';
   try {
     const res = await fetch(API_URL + `?userId=${encodeURIComponent(userId)}`);
@@ -205,17 +205,17 @@ async function fetchStatusAndUpdate() {
     spawalniaActive = !!status.spawalniaActive;
     activeProject = status.activeProject || "";
     showStatus();
-    showLoading(false);
+    if (showSpinner) showLoading(false);
   } catch (e) {
     document.getElementById('status').innerText = '❌ Błąd pobierania statusu';
-    showLoading(false);
+    if (showSpinner) showLoading(false);
   }
 }
 
-// Odświeżaj status co X sekund
+// Odświeżaj status co X sekund (bez spinnera)
 window.onload = () => {
-  fetchStatusAndUpdate();
-  setInterval(fetchStatusAndUpdate, 10000); // co 10 sekund
+  fetchStatusAndUpdate(true); // spinner tylko przy wejściu
+  setInterval(() => fetchStatusAndUpdate(false), 10000); // co 10 sekund bez spinnera
 };
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -230,7 +230,16 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-function sprawdzLokalizacjeIZapisz(projekt, akcja) {
+// Funkcja do wysyłania wielu prac (np. STOP Spawalnia + STOP Projekt)
+async function wyslijWieleDanych(prace) {
+  for (let i = 0; i < prace.length; i++) {
+    const { projekt, akcja } = prace[i];
+    await wyslijDane(projekt, akcja, i === 0); // spinner tylko przy pierwszym
+  }
+  await fetchStatusAndUpdate(true);
+}
+
+function sprawdzLokalizacjeIZapisz(projekt, akcja, multi = false) {
   showLoading(true);
   navigator.geolocation.getCurrentPosition(
     position => {
@@ -241,7 +250,14 @@ function sprawdzLokalizacjeIZapisz(projekt, akcja) {
         return dist <= 500;
       });
       if (wZasiegu) {
-        wyslijDane(projekt, akcja);
+        if (multi) {
+          wyslijWieleDanych([
+            { projekt: "Spawalnia", akcja: "STOP" },
+            { projekt: activeProject, akcja: "STOP" }
+          ]);
+        } else {
+          wyslijDane(projekt, akcja, true);
+        }
       } else {
         showLoading(false);
         document.getElementById('status').innerText = '❌ Musisz być na warsztacie';
@@ -269,14 +285,20 @@ function potwierdz(akcja) {
   }
 }
 
+// Zakończ pracę: jeśli jest podprojekt, zakończ oba
 function potwierdzSpawalnia(akcja) {
   const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
   if (blokujPrzycisk(btnId)) return;
-  const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
-  if (potwierdzenie) sprawdzLokalizacjeIZapisz("Spawalnia", akcja);
+  if (akcja === 'STOP' && activeProject) {
+    const potwierdzenie = confirm(`Czy na pewno chcesz zakończyć pracę na Spawalni i projekcie "${activeProject}"?`);
+    if (potwierdzenie) sprawdzLokalizacjeIZapisz(null, null, true);
+  } else {
+    const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
+    if (potwierdzenie) sprawdzLokalizacjeIZapisz("Spawalnia", akcja);
+  }
 }
 
-async function wyslijDane(projekt, akcja) {
+async function wyslijDane(projekt, akcja, showSpinner) {
   const uzytkownik = getParam('u') || 'Nieznany';
   try {
     const dane = { id: uzytkownik, projekt, akcja };
@@ -287,7 +309,8 @@ async function wyslijDane(projekt, akcja) {
       body: JSON.stringify(dane)
     });
     document.getElementById('status').innerText = '✅ DANE PRZESŁANE';
-    await fetchStatusAndUpdate(); // status odczytaj przez GET po zapisie
+    if (showSpinner) await fetchStatusAndUpdate(true); // odczytaj status po zapisie ze spinnerem
+    else await fetchStatusAndUpdate(false);
   } catch (e) {
     showLoading(false);
     document.getElementById('status').innerText = '❌ BŁĄD POŁĄCZENIA';
