@@ -6,95 +6,83 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
 body {
-background-color: black;
-color: orange;
-font-family: Arial, sans-serif;
-text-align: center;
-margin: 0;
-padding: 0;
-font-size: 18px;
+  background-color: black;
+  color: orange;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  font-size: 18px;
 }
-
 .container {
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: flex-end;
-min-height: 100vh;
-padding: 20px 20px 1000px;
-text-align: center;
-transform: scale(0.75) translateY(-10vh);
-transform-origin: top center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 100vh;
+  padding: 20px 20px 1000px;
+  text-align: center;
+  transform: scale(0.75) translateY(-10vh);
+  transform-origin: top center;
 }
-
 img.logo {
-max-width: 90%;
-height: auto;
-margin-bottom: 30px;
+  max-width: 90%;
+  height: auto;
+  margin-bottom: 30px;
 }
-
 select, button {
-width: 100%;
-padding: 16px;
-margin: 12px 0;
-font-size: 18px;
-border: none;
-border-radius: 6px;
+  width: 100%;
+  padding: 16px;
+  margin: 12px 0;
+  font-size: 18px;
+  border: none;
+  border-radius: 6px;
 }
-
 select {
-background-color: #333;
-color: orange;
+  background-color: #333;
+  color: orange;
 }
-
 button {
-background-color: orange;
-color: black;
-font-weight: bold;
-transition: all 0.1s ease;
+  background-color: orange;
+  color: black;
+  font-weight: bold;
+  transition: all 0.1s ease;
 }
-
 .button-row {
-display: flex;
-justify-content: space-between;
-gap: 10px;
-margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 20px;
 }
-
 .button-row button {
-flex: 1;
+  flex: 1;
 }
-
 button:active {
-transform: scale(0.95);
-background-color: #ff9900;
-box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
+  transform: scale(0.95);
+  background-color: #ff9900;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
 }
-
 #status {
-margin-top: 20px;
-font-size: 16px;
+  margin-top: 20px;
+  font-size: 16px;
 }
-
 .status-box {
-margin-top: 20px;
-font-size: 20px;
-font-weight: bold;
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
 }
-
 .spinner {
-border: 6px solid #f3f3f3;
-border-top: 6px solid orange;
-border-radius: 50%;
-width: 50px;
-height: 50px;
-animation: spin 1s linear infinite;
-margin: 30px auto 0;
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid orange;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 30px auto 0;
 }
-
 @keyframes spin {
-0% { transform: rotate(0deg); }
-100% { transform: rotate(360deg); }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
 </head>
@@ -104,19 +92,19 @@ margin: 30px auto 0;
 
 <!-- 🔶 Przyciski do Spawalni -->
 <div class="button-row">
-<button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">ROZPOCZNIJ PRACĘ</button>
-<button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">ZAKOŃCZ    PRACĘ</button>
+  <button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">ROZPOCZNIJ PRACĘ</button>
+  <button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">ZAKOŃCZ PRACĘ</button>
 </div>
 
 <h2>WYBIERZ PROJEKT</h2>
 <select id="projekt">
-<option value="WP41 - 241011008">WP41 - 241011008</option>
-<option value="M3 - 241011006">M3 - 241011006</option>
-<option value="Area C - 241011011">Area C - 241011011</option>
-<option value="PGI Izolacja - 241011012">PGI Izolacja - 241011012</option>
-<option value="Lilly - 251011005">Lilly - 251011005</option>
-<option value="PGI Zbiornik - 251011002">PGI Zbiornik - 251011002</option>
-<option value="PGI Wyspa - 251011003">PGI Wyspa - 251011003</option>
+  <option value="WP41 - 241011008">WP41 - 241011008</option>
+  <option value="M3 - 241011006">M3 - 241011006</option>
+  <option value="Area C - 241011011">Area C - 241011011</option>
+  <option value="PGI Izolacja - 241011012">PGI Izolacja - 241011012</option>
+  <option value="Lilly - 251011005">Lilly - 251011005</option>
+  <option value="PGI Zbiornik - 251011002">PGI Zbiornik - 251011002</option>
+  <option value="PGI Wyspa - 251011003">PGI Wyspa - 251011003</option>
 </select>
 
 <button id="btnStart" onclick="potwierdz('START')">START</button>
@@ -129,122 +117,135 @@ margin: 30px auto 0;
 
 <script>
 const warsztaty = [
-{ nazwa: "Warsztat 1", lat: 50.464580, lon: 17.945128 },
-{ nazwa: "Warsztat 2", lat: 50.519695, lon: 18.306097 },
-{ nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
+  { nazwa: "Warsztat 1", lat: 50.464580, lon: 17.945128 },
+  { nazwa: "Warsztat 2", lat: 50.519695, lon: 18.306097 },
+  { nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
 ];
 
-const blokadaKlikniec = {};
+const API_URL = 'https://script.google.com/macros/s/AKfycbxCZBEuVLJF0tTUQ8ind7qkbNKMceQ_u2oedkeB9ijkw9FfH6YO6-vBbzg1zHRL0cKD/exec';
 
-function blokujPrzycisk(id) {
-const przycisk = document.getElementById(id);
-if (przycisk.disabled) return true;
-
-przycisk.disabled = true;
-blokadaKlikniec[id] = true;
-
-setTimeout(() => {
-przycisk.disabled = false;
-blokadaKlikniec[id] = false;
-}, 15000); // 15 sekund
-
-return false;
-}
-
-function haversineDistance(lat1, lon1, lat2, lon2) {
-const R = 6371000;
-const toRad = x => x * Math.PI / 180;
-const dLat = toRad(lat2 - lat1);
-const dLon = toRad(lon2 - lon1);
-const a = Math.sin(dLat / 2) ** 2 +
-Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-Math.sin(dLon / 2) ** 2;
-const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-return R * c;
-}
+let spawalniaActive = false;
+let activeProject = "";
 
 function getParam(name) {
-const params = new URLSearchParams(window.location.search);
-return params.get(name);
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
 }
 
-function potwierdz(akcja) {
-const btnId = akcja === 'START' ? 'btnStart' : 'btnStop';
-if (blokujPrzycisk(btnId)) return;
-
-const projekt = document.getElementById('projekt').value;
-const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
-if (potwierdzenie) {
-sprawdzLokalizacjeIZapisz(projekt, akcja);
-}
+function blokujPrzycisk(id) {
+  const przycisk = document.getElementById(id);
+  if (przycisk.disabled) return true;
+  przycisk.disabled = true;
+  setTimeout(() => { przycisk.disabled = false; }, 15000);
+  return false;
 }
 
-function potwierdzSpawalnia(akcja) {
-const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
-if (blokujPrzycisk(btnId)) return;
-
-const projekt = "Spawalnia";
-const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
-if (potwierdzenie) {
-sprawdzLokalizacjeIZapisz(projekt, akcja);
+function showStatus() {
+  const info = [];
+  if (spawalniaActive) info.push('Pracujesz na projekcie: Spawalnia');
+  if (activeProject) info.push('Pracujesz na projekcie: ' + activeProject);
+  document.getElementById('projektInfo').innerText = info.join('\n') || 'Nie pracujesz na żadnym projekcie';
+  // Przycisk Spawalnia
+  document.getElementById('btnSpawalniaStart').style.display = spawalniaActive ? 'none' : '';
+  document.getElementById('btnSpawalniaStop').style.display = spawalniaActive ? '' : 'none';
+  // Przycisk START/STOP projektu
+  document.getElementById('btnStart').style.display = (spawalniaActive && !activeProject) ? '' : 'none';
+  document.getElementById('btnStop').style.display = (spawalniaActive && activeProject) ? '' : 'none';
+  document.getElementById('projekt').disabled = !(spawalniaActive && !activeProject);
 }
+
+async function fetchStatusAndUpdate() {
+  const userId = getParam('u') || 'Nieznany';
+  try {
+    const res = await fetch(API_URL + `?userId=${encodeURIComponent(userId)}`);
+    const status = await res.json();
+    spawalniaActive = !!status.spawalniaActive;
+    activeProject = status.activeProject || "";
+    showStatus();
+  } catch (e) {
+    document.getElementById('status').innerText = '❌ Błąd pobierania statusu';
+  }
+}
+
+window.onload = fetchStatusAndUpdate;
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 function sprawdzLokalizacjeIZapisz(projekt, akcja) {
-navigator.geolocation.getCurrentPosition(
-position => {
-const userLat = position.coords.latitude;
-const userLon = position.coords.longitude;
-
-const wZasiegu = warsztaty.some(w => {
-const dist = haversineDistance(userLat, userLon, w.lat, w.lon);
-return dist <= 500;
-});
-
-if (wZasiegu) {
-wyslijDane(projekt, akcja);
-} else {
-document.getElementById('status').innerText = '❌ Musisz być na warsztacie';
-}
-},
-error => {
-document.getElementById('status').innerHTML = '❌ Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';
-}
-);
+  navigator.geolocation.getCurrentPosition(
+    position => {
+      const userLat = position.coords.latitude;
+      const userLon = position.coords.longitude;
+      const wZasiegu = warsztaty.some(w => {
+        const dist = haversineDistance(userLat, userLon, w.lat, w.lon);
+        return dist <= 500;
+      });
+      if (wZasiegu) {
+        wyslijDane(projekt, akcja);
+      } else {
+        document.getElementById('status').innerText = '❌ Musisz być na warsztacie';
+      }
+    },
+    error => {
+      document.getElementById('status').innerHTML = '❌ Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';
+    }
+  );
 }
 
-function wyslijDane(projekt, akcja) {
-const uzytkownik = getParam('u') || 'Nieznany';
-document.getElementById('loader').style.display = 'block';
+function potwierdz(akcja) {
+  const btnId = akcja === 'START' ? 'btnStart' : 'btnStop';
+  if (blokujPrzycisk(btnId)) return;
+  const projekt = document.getElementById('projekt').value;
+  const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "${projekt}"?`);
+  if (potwierdzenie) {
+    sprawdzLokalizacjeIZapisz(projekt, akcja);
+  }
+}
 
-const dane = {
-id: uzytkownik,
-projekt: projekt,
-akcja: akcja
-};
+function potwierdzSpawalnia(akcja) {
+  const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
+  if (blokujPrzycisk(btnId)) return;
+  const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
+  if (potwierdzenie) {
+    sprawdzLokalizacjeIZapisz("Spawalnia", akcja);
+  }
+}
 
-fetch('https://script.google.com/macros/s/AKfycbyepI0AEAOb92OtZsiaAP6HQV4fbvcdUp_rM3cUzm5mD0eJmjMHpAO7zXvjJooukLsv/exec', {
-method: 'POST',
-mode: 'no-cors',
-headers: {
-'Content-Type': 'application/json'
-},
-body: JSON.stringify(dane)
-})
-.then(() => {
-document.getElementById('loader').style.display = 'none';
-document.getElementById('status').innerText = '✅ DANE PRZESŁANE';
-document.getElementById('projektInfo').innerText =
-akcja === 'START'
-? `Pracujesz teraz na projekcie: ${projekt}`
-: 'Zakończyłeś pracę';
-})
-.catch(() => {
-document.getElementById('loader').style.display = 'none';
-document.getElementById('status').innerText = '❌ BŁĄD POŁĄCZENIA';
-});
+async function wyslijDane(projekt, akcja) {
+  const uzytkownik = getParam('u') || 'Nieznany';
+  document.getElementById('loader').style.display = 'block';
+  document.getElementById('status').innerText = '';
+  try {
+    const dane = { id: uzytkownik, projekt, akcja };
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dane)
+    });
+    const out = await res.json();
+    document.getElementById('loader').style.display = 'none';
+    if (out.result === 'success') {
+      document.getElementById('status').innerText = '✅ DANE PRZESŁANE';
+      await fetchStatusAndUpdate();
+    } else {
+      document.getElementById('status').innerText = '❌ ' + (out.message || 'Błąd');
+      await fetchStatusAndUpdate();
+    }
+  } catch (e) {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('status').innerText = '❌ BŁĄD POŁĄCZENIA';
+  }
 }
 </script>
 </body>
 </html>
-
