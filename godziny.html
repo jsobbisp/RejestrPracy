@@ -21,7 +21,6 @@ body {
   justify-content: flex-end;
   min-height: 100vh;
   padding: 20px 20px 1000px;
-  text-align: center;
   transform: scale(0.75) translateY(-10vh);
   transform-origin: top center;
 }
@@ -115,13 +114,13 @@ button:active {
   <img src="logo4.png" alt="Logo" />
   <div class="spinner"></div>
 </div>
+
 <div class="container">
 <img src="logo4.png" alt="Logo" class="logo" />
 
-<!-- 🔶 Przyciski do Spawalni -->
 <div class="button-row">
-  <button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">ROZPOCZNIJ PRACĘ</button>
-  <button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">ZAKOŃCZ PRACĘ</button>
+  <button id="btnSpawalniaStart">ROZPOCZNIJ PRACĘ</button>
+  <button id="btnSpawalniaStop">ZAKOŃCZ PRACĘ</button>
 </div>
 
 <h2 id="projektyNaglowek">WYBIERZ PROJEKT</h2>
@@ -135,8 +134,8 @@ button:active {
   <option value="PGI Wyspa - 251011003">PGI Wyspa - 251011003</option>
 </select>
 
-<button id="btnStart" onclick="potwierdz('START')">START PROJEKT</button>
-<button id="btnStop" onclick="potwierdz('STOP')">STOP PROJEKT</button>
+<button id="btnStart">START PROJEKT</button>
+<button id="btnStop">STOP PROJEKT</button>
 
 <p id="status"></p>
 <div class="status-box" id="projektInfo"></div>
@@ -144,47 +143,33 @@ button:active {
 </div>
 
 <script>
-// --- userId w localStorage ---
-(function() {
-  const urlParams = new URLSearchParams(window.location.search);
-  let userId = localStorage.getItem('userId');
-
-  if (!userId) {
-    userId = urlParams.get('u');
-    if (userId) {
-      localStorage.setItem('userId', userId);
-    } else {
-      userId = prompt("Podaj swoje ID użytkownika:");
-      if (userId) localStorage.setItem('userId', userId);
-    }
-  }
-
-  window.USER_ID = userId;
-})();
-
-// --- reszta Twojego JS ---
+const API_URL = 'https://script.google.com/macros/s/AKfycbzVFMw6qS9xgFyr6QiKqjVuIsOlBcgfxpwVtNrqcyZgBjgI8odaGUkUl85jMXQz1fh9/exec';
 const warsztaty = [
   { nazwa: "Warsztat 1", lat: 50.464580, lon: 17.945128 },
   { nazwa: "Warsztat 2", lat: 50.519695, lon: 18.306097 },
   { nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
 ];
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbzVFMw6qS9xgFyr6QiKqjVuIsOlBcgfxpwVtNrqcyZgBjgI8odaGUkUl85jMXQz1fh9/exec';
-
 let spawalniaActive = false;
 let activeProject = "";
 let manualLoading = false;
 
-function blokujPrzycisk(id) {
-  const przycisk = document.getElementById(id);
-  if (przycisk.disabled) return true;
-  przycisk.disabled = true;
-  setTimeout(() => { przycisk.disabled = false; }, 15000);
-  return false;
+// Pobranie userId z localStorage lub z linku
+if (!localStorage.getItem('userId')) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const userId = urlParams.get('u') || 'Nieznany';
+  localStorage.setItem('userId', userId);
 }
+window.USER_ID = localStorage.getItem('userId');
 
-function showLoading(show) {
-  document.getElementById('loadingScreen').style.display = show ? '' : 'none';
+function showLoading(show) { document.getElementById('loadingScreen').style.display = show ? '' : 'none'; }
+
+function blokujPrzycisk(id) {
+  const btn = document.getElementById(id);
+  if (btn.disabled) return true;
+  btn.disabled = true;
+  setTimeout(() => { btn.disabled = false; }, 15000);
+  return false;
 }
 
 function showStatus() {
@@ -193,53 +178,39 @@ function showStatus() {
   if (activeProject) info.push('Pracujesz na projekcie: ' + activeProject);
   document.getElementById('projektInfo').innerText = info.join('\n') || 'Nie pracujesz na żadnym projekcie';
 
-  // Spawalnia
   document.getElementById('btnSpawalniaStart').style.display = spawalniaActive ? 'none' : '';
   document.getElementById('btnSpawalniaStop').style.display = spawalniaActive ? '' : 'none';
 
-  // Projekty
   const projektyWidoczne = spawalniaActive && !activeProject;
   document.getElementById('projektyNaglowek').style.display = projektyWidoczne ? '' : 'none';
   document.getElementById('projekt').style.display = projektyWidoczne ? '' : 'none';
   document.getElementById('btnStart').style.display = projektyWidoczne ? '' : 'none';
   document.getElementById('btnStop').style.display = (spawalniaActive && activeProject) ? '' : 'none';
-
-  document.getElementById('btnStart').innerText = 'START PROJEKT';
-  document.getElementById('btnStop').innerText = 'STOP PROJEKT';
 }
 
 async function fetchStatusAndUpdate(showSpinner = false) {
   if (showSpinner || manualLoading) showLoading(true);
-  const userId = window.USER_ID || 'Nieznany';
   try {
-    const res = await fetch(API_URL + ?userId=${encodeURIComponent(userId)});
+    const res = await fetch(API_URL + ?userId=${encodeURIComponent(window.USER_ID)});
     const status = await res.json();
     spawalniaActive = !!status.spawalniaActive;
     activeProject = status.activeProject || "";
     showStatus();
     showLoading(false);
     manualLoading = false;
-  } catch (e) {
+  } catch {
     document.getElementById('status').innerText = '❌ Błąd pobierania statusu';
     showLoading(false);
     manualLoading = false;
   }
 }
 
-window.onload = () => {
-  manualLoading = true;
-  fetchStatusAndUpdate(true);
-  setInterval(() => fetchStatusAndUpdate(false), 10000);
-};
-
 function haversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371000;
   const toRad = x => x * Math.PI / 180;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) ** 2;
+  const a = Math.sin(dLat / 2) * 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -247,13 +218,10 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 function sprawdzLokalizacjeIZapisz(projekt, akcja, callback) {
   showLoading(true);
   navigator.geolocation.getCurrentPosition(
-    position => {
-      const userLat = position.coords.latitude;
-      const userLon = position.coords.longitude;
-      const wZasiegu = warsztaty.some(w => {
-        const dist = haversineDistance(userLat, userLon, w.lat, w.lon);
-        return dist <= 500;
-      });
+    pos => {
+      const userLat = pos.coords.latitude;
+      const userLon = pos.coords.longitude;
+      const wZasiegu = warsztaty.some(w => haversineDistance(userLat,userLon,w.lat,w.lon)<=500);
       if (wZasiegu) {
         wyslijDane(projekt, akcja, callback);
       } else {
@@ -261,17 +229,16 @@ function sprawdzLokalizacjeIZapisz(projekt, akcja, callback) {
         document.getElementById('status').innerText = '❌ Musisz być na warsztacie';
       }
     },
-    error => {
+    () => {
       showLoading(false);
-      document.getElementById('status').innerHTML = '❌ Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';
+      document.getElementById('status').innerHTML = '❌ Wymagana lokalizacja.<br><br><button onclick="location.reload()">Spróbuj ponownie</button>';
     }
   );
 }
 
 async function wyslijDane(projekt, akcja, callback) {
-  const uzytkownik = window.USER_ID || 'Nieznany';
   try {
-    const dane = { id: uzytkownik, projekt, akcja };
+    const dane = { id: window.USER_ID, projekt, akcja };
     await fetch(API_URL, {
       method: 'POST',
       mode: 'no-cors',
@@ -279,61 +246,52 @@ async function wyslijDane(projekt, akcja, callback) {
       body: JSON.stringify(dane)
     });
     document.getElementById('status').innerText = '✅ DANE PRZESŁANE';
-    if (typeof callback === 'function') {
-      callback();
-    } else {
-      manualLoading = true;
-      await fetchStatusAndUpdate(true);
-    }
-  } catch (e) {
+    if (typeof callback === 'function') callback();
+    else { manualLoading=true; await fetchStatusAndUpdate(true); }
+  } catch {
     showLoading(false);
     document.getElementById('status').innerText = '❌ BŁĄD POŁĄCZENIA';
   }
 }
 
+// START/STOP PROJEKTU
 function potwierdz(akcja) {
-  const btnId = akcja === 'START' ? 'btnStart' : 'btnStop';
-  if (blokujPrzycisk(btnId)) return;
-  let projekt;
-  if (akcja === 'START') {
-    projekt = document.getElementById('projekt').value;
-    const potwierdzenie = confirm(Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?);
-    if (potwierdzenie) {
-      manualLoading = true;
-      sprawdzLokalizacjeIZapisz(projekt, 'START');
+  if (blokujPrzycisk(akcja==='START'?'btnStart':'btnStop')) return;
+  if (akcja==='START') {
+    const projekt = document.getElementById('projekt').value;
+    if (confirm(Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?)) {
+      manualLoading=true; sprawdzLokalizacjeIZapisz(projekt,'START');
     }
   } else {
-    projekt = activeProject;
-    const potwierdzenie = confirm(Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?);
-    if (potwierdzenie) {
-      manualLoading = true;
-      sprawdzLokalizacjeIZapisz(projekt, 'STOP');
+    if (confirm(Czy na pewno chcesz zakończyć pracę na projekcie "${activeProject}"?)) {
+      manualLoading=true; sprawdzLokalizacjeIZapisz(activeProject,'STOP');
     }
   }
 }
 
 function potwierdzSpawalnia(akcja) {
-  const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
-  if (blokujPrzycisk(btnId)) return;
-  const potwierdzenie = confirm(Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?);
-  if (potwierdzenie) {
-    manualLoading = true;
-    if (akcja === 'STOP' && activeProject) {
-      sprawdzLokalizacjeIZapisz(activeProject, 'STOP', () => {
-        sprawdzLokalizacjeIZapisz("Spawalnia", 'STOP');
-      });
-    } else {
-      sprawdzLokalizacjeIZapisz("Spawalnia", akcja);
-    }
+  if (blokujPrzycisk(akcja==='START'?'btnSpawalniaStart':'btnSpawalniaStop')) return;
+  if (confirm(Czy na pewno chcesz ${akcja==='START'?'rozpocząć':'zakończyć'} pracę na projekcie "Spawalnia"?)) {
+    manualLoading=true;
+    if (akcja==='STOP' && activeProject) {
+      sprawdzLokalizacjeIZapisz(activeProject,'STOP',()=>{ sprawdzLokalizacjeIZapisz("Spawalnia",'STOP'); });
+    } else { sprawdzLokalizacjeIZapisz("Spawalnia",akcja); }
   }
 }
- // Obsługa kliknięć przycisków
-document.getElementById('btnStart').addEventListener('click', () => potwierdz('START'));
-document.getElementById('btnStop').addEventListener('click', () => potwierdz('STOP'));
-document.getElementById('btnSpawalniaStart').addEventListener('click', () => potwierdzSpawalnia('START'));
-document.getElementById('btnSpawalniaStop').addEventListener('click', () => potwierdzSpawalnia('STOP'));
+
+// Podpinamy eventy po załadowaniu
+window.addEventListener('DOMContentLoaded', () => {
+  window.potwierdz = potwierdz;
+  window.potwierdzSpawalnia = potwierdzSpawalnia;
+  document.getElementById('btnStart').addEventListener('click', () => potwierdz('START'));
+  document.getElementById('btnStop').addEventListener('click', () => potwierdz('STOP'));
+  document.getElementById('btnSpawalniaStart').addEventListener('click', () => potwierdzSpawalnia('START'));
+  document.getElementById('btnSpawalniaStop').addEventListener('click', () => potwierdzSpawalnia('STOP'));
+
+  manualLoading = true;
+  fetchStatusAndUpdate(true);
+  setInterval(() => fetchStatusAndUpdate(false), 10000);
+});
 </script>
 </body>
 </html>
-
-
