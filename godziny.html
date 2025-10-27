@@ -327,7 +327,13 @@ function potwierdzSpawalnia(akcja) {
     }
   }
 }
+ // Obsługa kliknięć przycisków
+document.getElementById('btnStart').addEventListener('click', () => potwierdz('START'));
+document.getElementById('btnStop').addEventListener('click', () => potwierdz('STOP'));
+document.getElementById('btnSpawalniaStart').addEventListener('click', () => potwierdzSpawalnia('START'));
+document.getElementById('btnSpawalniaStop').addEventListener('click', () => potwierdzSpawalnia('STOP'));
 </script>
 </body>
 </html>
+
 
