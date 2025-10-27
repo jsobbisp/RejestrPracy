@@ -222,6 +222,18 @@ function potwierdzSpawalnia(akcja) {
     }
   }
 }
+  if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(reg => console.log('SW zarejestrowany', reg))
+    .catch(err => console.log('Błąd rejestracji SW', err));
+
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission().then(permission => {
+      console.log('Powiadomienia:', permission);
+    });
+  }
+}
 </script>
 </body>
 </html>
+
