@@ -150,7 +150,7 @@ const warsztaty = [
   { nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
 ];
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbxnP9XSSprAnQpqcG2S0Rw4EGX302yp-LlLjAqnGDOBktfaSV5WemgZBVND8u5mMSMk/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzVFMw6qS9xgFyr6QiKqjVuIsOlBcgfxpwVtNrqcyZgBjgI8odaGUkUl85jMXQz1fh9/exec';
 
 let spawalniaActive = false;
 let activeProject = "";
@@ -201,7 +201,7 @@ async function fetchStatusAndUpdate(showSpinner = false) {
   if (showSpinner || manualLoading) showLoading(true);
   const userId = getParam('u') || 'Nieznany';
   try {
-    const res = await fetch(API_URL + ?userId=${encodeURIComponent(userId)});
+    const res = await fetch(API_URL + `?userId=${encodeURIComponent(userId)}`);
     const status = await res.json();
     spawalniaActive = !!status.spawalniaActive;
     activeProject = status.activeProject || "";
@@ -290,14 +290,14 @@ function potwierdz(akcja) {
   let projekt;
   if (akcja === 'START') {
     projekt = document.getElementById('projekt').value;
-    const potwierdzenie = confirm(Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?);
+    const potwierdzenie = confirm(`Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?`);
     if (potwierdzenie) {
       manualLoading = true;
       sprawdzLokalizacjeIZapisz(projekt, 'START');
     }
   } else {
     projekt = activeProject;
-    const potwierdzenie = confirm(Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?);
+    const potwierdzenie = confirm(`Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?`);
     if (potwierdzenie) {
       manualLoading = true;
       sprawdzLokalizacjeIZapisz(projekt, 'STOP');
@@ -309,7 +309,7 @@ function potwierdz(akcja) {
 function potwierdzSpawalnia(akcja) {
   const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
   if (blokujPrzycisk(btnId)) return;
-  const potwierdzenie = confirm(Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?);
+  const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
   if (potwierdzenie) {
     manualLoading = true;
     if (akcja === 'STOP' && activeProject) {
@@ -325,4 +325,3 @@ function potwierdzSpawalnia(akcja) {
 </script>
 </body>
 </html>
-
