@@ -4,110 +4,24 @@
 <meta charset="UTF-8" />
 <title>Rejestracja czasu pracy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="manifest" href="manifest.json">
 <style>
-body {
-  background-color: black;
-  color: orange;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  font-size: 18px;
-}
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  min-height: 100vh;
-  padding: 20px 20px 1000px;
-  text-align: center;
-  transform: scale(0.75) translateY(-10vh);
-  transform-origin: top center;
-}
-img.logo {
-  max-width: 90%;
-  height: auto;
-  margin-bottom: 30px;
-}
-select, button {
-  width: 100%;
-  padding: 16px;
-  margin: 12px 0;
-  font-size: 18px;
-  border: none;
-  border-radius: 6px;
-}
-select {
-  background-color: #333;
-  color: orange;
-}
-button {
-  background-color: orange;
-  color: black;
-  font-weight: bold;
-  transition: all 0.1s ease;
-}
-.button-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-.button-row button {
-  flex: 1;
-}
-button:active {
-  transform: scale(0.95);
-  background-color: #ff9900;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.5) inset;
-}
-#status {
-  margin-top: 20px;
-  font-size: 16px;
-}
-.status-box {
-  margin-top: 20px;
-  font-size: 20px;
-  font-weight: bold;
-}
-.spinner {
-  border: 10px solid #f3f3f3;
-  border-top: 10px solid orange;
-  border-radius: 50%;
-  width: 120px;
-  height: 120px;
-  animation: spin 1s linear infinite;
-  margin: 30px auto 0;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Ekran ładowania */
-#loadingScreen {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: black;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-#loadingScreen img {
-  width: 350px;
-  max-width: 80vw;
-  margin-bottom: 50px;
-}
-#loadingScreen .spinner {
-  width: 120px;
-  height: 120px;
-  margin: 0;
-}
+body { background-color:black;color:orange;font-family:Arial,sans-serif;text-align:center;margin:0;padding:0;font-size:18px;}
+.container {display:flex;flex-direction:column;align-items:center;justify-content:flex-end;min-height:100vh;padding:20px 20px 1000px;text-align:center;transform:scale(0.75) translateY(-10vh);transform-origin:top center;}
+img.logo {max-width:90%;height:auto;margin-bottom:30px;}
+select,button {width:100%;padding:16px;margin:12px 0;font-size:18px;border:none;border-radius:6px;}
+select {background-color:#333;color:orange;}
+button {background-color:orange;color:black;font-weight:bold;transition:all 0.1s ease;}
+.button-row {display:flex;justify-content:space-between;gap:10px;margin-bottom:20px;}
+.button-row button {flex:1;}
+button:active {transform:scale(0.95);background-color:#ff9900;box-shadow:0 2px 4px rgba(0,0,0,0.5) inset;}
+#status {margin-top:20px;font-size:16px;}
+.status-box {margin-top:20px;font-size:20px;font-weight:bold;}
+.spinner {border:10px solid #f3f3f3;border-top:10px solid orange;border-radius:50%;width:120px;height:120px;animation:spin 1s linear infinite;margin:30px auto 0;}
+@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}
+#loadingScreen {position:fixed;top:0;left:0;width:100vw;height:100vh;background:black;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+#loadingScreen img {width:350px;max-width:80vw;margin-bottom:50px;}
+#loadingScreen .spinner {width:120px;height:120px;margin:0;}
 </style>
 </head>
 <body>
@@ -118,14 +32,13 @@ button:active {
 <div class="container">
 <img src="logo4.png" alt="Logo" class="logo" />
 
-<!-- 🔶 Przyciski do Spawalni -->
 <div class="button-row">
   <button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">ROZPOCZNIJ PRACĘ</button>
   <button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">ZAKOŃCZ PRACĘ</button>
 </div>
 
 <h2 id="projektyNaglowek">WYBIERZ PROJEKT</h2>
-<select id="projekt">
+<select id="projekt" disabled>
   <option value="WP41 - 241011008">WP41 - 241011008</option>
   <option value="M3 - 241011006">M3 - 241011006</option>
   <option value="Area C - 241011011">Area C - 241011011</option>
@@ -150,11 +63,12 @@ const warsztaty = [
   { nazwa: "Warsztat 3", lat: 50.477306, lon: 17.951307 }
 ];
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbzVFMw6qS9xgFyr6QiKqjVuIsOlBcgfxpwVtNrqcyZgBjgI8odaGUkUl85jMXQz1fh9/exec';
-
+const API_URL = 'https://script.google.com/macros/s/.../exec';
 let spawalniaActive = false;
 let activeProject = "";
 let manualLoading = false;
+
+let obecnyProjekt = null; // nowa zmienna ogólna
 
 function getParam(name) {
   const params = new URLSearchParams(window.location.search);
@@ -169,23 +83,19 @@ function blokujPrzycisk(id) {
   return false;
 }
 
-// Pokazuje/ukrywa ekran ładowania
 function showLoading(show) {
   document.getElementById('loadingScreen').style.display = show ? '' : 'none';
 }
 
-// Pokazuje aktualny status i steruje widocznością elementów
 function showStatus() {
   const info = [];
   if (spawalniaActive) info.push('Pracujesz na projekcie: Spawalnia');
   if (activeProject) info.push('Pracujesz na projekcie: ' + activeProject);
   document.getElementById('projektInfo').innerText = info.join('\n') || 'Nie pracujesz na żadnym projekcie';
 
-  // Spawalnia
   document.getElementById('btnSpawalniaStart').style.display = spawalniaActive ? 'none' : '';
   document.getElementById('btnSpawalniaStop').style.display = spawalniaActive ? '' : 'none';
 
-  // Projekty
   const projektyWidoczne = spawalniaActive && !activeProject;
   document.getElementById('projektyNaglowek').style.display = projektyWidoczne ? '' : 'none';
   document.getElementById('projekt').style.display = projektyWidoczne ? '' : 'none';
@@ -196,12 +106,11 @@ function showStatus() {
   document.getElementById('btnStop').innerText = 'STOP PROJEKT';
 }
 
-// Pobiera status z serwera i odświeża widoczność elementów
 async function fetchStatusAndUpdate(showSpinner = false) {
   if (showSpinner || manualLoading) showLoading(true);
   const userId = getParam('u') || 'Nieznany';
   try {
-    const res = await fetch(API_URL + `?userId=${encodeURIComponent(userId)}`);
+    const res = await fetch(API_URL + ?userId=${encodeURIComponent(userId)});
     const status = await res.json();
     spawalniaActive = !!status.spawalniaActive;
     activeProject = status.activeProject || "";
@@ -215,11 +124,10 @@ async function fetchStatusAndUpdate(showSpinner = false) {
   }
 }
 
-// Odświeżaj status co X sekund (bez spinnera)
 window.onload = () => {
   manualLoading = true;
   fetchStatusAndUpdate(true);
-  setInterval(() => fetchStatusAndUpdate(false), 10000); // co 10 sekund
+  setInterval(() => fetchStatusAndUpdate(false), 10000);
 };
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
@@ -234,7 +142,6 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-// Dodaj callback do sprawdzLokalizacjeIZapisz
 function sprawdzLokalizacjeIZapisz(projekt, akcja, callback) {
   showLoading(true);
   navigator.geolocation.getCurrentPosition(
@@ -259,7 +166,6 @@ function sprawdzLokalizacjeIZapisz(projekt, akcja, callback) {
   );
 }
 
-// Dodaj callback do wyslijDane
 async function wyslijDane(projekt, akcja, callback) {
   const uzytkownik = getParam('u') || 'Nieznany';
   try {
@@ -271,33 +177,29 @@ async function wyslijDane(projekt, akcja, callback) {
       body: JSON.stringify(dane)
     });
     document.getElementById('status').innerText = '✅ DANE PRZESŁANE';
-    if (typeof callback === 'function') {
-      callback();
-    } else {
-      manualLoading = true;
-      await fetchStatusAndUpdate(true); // status odczytaj przez GET po zapisie
-    }
+    if (typeof callback === 'function') callback();
+    else { manualLoading = true; await fetchStatusAndUpdate(true); }
   } catch (e) {
     showLoading(false);
     document.getElementById('status').innerText = '❌ BŁĄD POŁĄCZENIA';
   }
 }
 
-// START/STOP PROJEKTU
 function potwierdz(akcja) {
   const btnId = akcja === 'START' ? 'btnStart' : 'btnStop';
   if (blokujPrzycisk(btnId)) return;
   let projekt;
   if (akcja === 'START') {
     projekt = document.getElementById('projekt').value;
-    const potwierdzenie = confirm(`Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?`);
+    const potwierdzenie = confirm(Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?);
     if (potwierdzenie) {
+      obecnyProjekt = projekt; // pamięta ogólny projekt
       manualLoading = true;
       sprawdzLokalizacjeIZapisz(projekt, 'START');
     }
   } else {
     projekt = activeProject;
-    const potwierdzenie = confirm(`Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?`);
+    const potwierdzenie = confirm(Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?);
     if (potwierdzenie) {
       manualLoading = true;
       sprawdzLokalizacjeIZapisz(projekt, 'STOP');
@@ -305,15 +207,13 @@ function potwierdz(akcja) {
   }
 }
 
-// ZAKOŃCZ PRACĘ (STOP SPAWALNIA + opcjonalnie STOP podprojekt)
 function potwierdzSpawalnia(akcja) {
   const btnId = akcja === 'START' ? 'btnSpawalniaStart' : 'btnSpawalniaStop';
   if (blokujPrzycisk(btnId)) return;
-  const potwierdzenie = confirm(`Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?`);
+  const potwierdzenie = confirm(Czy na pewno chcesz ${akcja === 'START' ? 'rozpocząć' : 'zakończyć'} pracę na projekcie "Spawalnia"?);
   if (potwierdzenie) {
     manualLoading = true;
     if (akcja === 'STOP' && activeProject) {
-      // najpierw STOP podprojekt, potem STOP spawalnia
       sprawdzLokalizacjeIZapisz(activeProject, 'STOP', () => {
         sprawdzLokalizacjeIZapisz("Spawalnia", 'STOP');
       });
@@ -325,4 +225,3 @@ function potwierdzSpawalnia(akcja) {
 </script>
 </body>
 </html>
-
