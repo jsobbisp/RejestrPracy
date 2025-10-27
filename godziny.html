@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <title>Rejestracja czasu pracy</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.json" />
 <style>
 body {
   background-color: black;
@@ -23,13 +23,19 @@ body {
   min-height: 100vh;
   padding: 20px 20px 1000px;
   text-align: center;
-  transform: scale(0.75) translateY(-10vh);
-  transform-origin: top center;
 }
-img.logo { max-width: 90%; height: auto; margin-bottom: 30px; }
+img.logo {
+  max-width: 90%;
+  height: auto;
+  margin-bottom: 30px;
+}
 select, button {
-  width: 100%; padding: 16px; margin: 12px 0; font-size: 18px;
-  border: none; border-radius: 6px;
+  width: 100%;
+  padding: 16px;
+  margin: 12px 0;
+  font-size: 18px;
+  border: none;
+  border-radius: 6px;
 }
 select { background-color: #333; color: orange; }
 button { background-color: orange; color: black; font-weight: bold; transition: all 0.1s ease; }
@@ -40,13 +46,14 @@ button:active { transform: scale(0.95); background-color: #ff9900; box-shadow: 0
 .status-box { margin-top: 20px; font-size: 20px; font-weight: bold; }
 .spinner { border: 10px solid #f3f3f3; border-top: 10px solid orange; border-radius: 50%; width: 120px; height: 120px; animation: spin 1s linear infinite; margin: 30px auto 0; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#loadingScreen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: black; z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-#loadingScreen img { width: 350px; max-width: 80vw; margin-bottom: 50px; }
-#loadingScreen .spinner { width: 120px; height: 120px; margin: 0; }
+#loadingScreen { position: fixed; top:0; left:0; width:100vw; height:100vh; background:black; z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+#loadingScreen.show { display:flex; pointer-events:auto; }
+#loadingScreen img { width:350px; max-width:80vw; margin-bottom:50px; }
+#loadingScreen .spinner { width:120px; height:120px; margin:0; }
 </style>
 </head>
 <body>
-<div id="loadingScreen" style="display:none;">
+<div id="loadingScreen">
   <img src="logo4.png" alt="Logo" />
   <div class="spinner"></div>
 </div>
@@ -55,8 +62,8 @@ button:active { transform: scale(0.95); background-color: #ff9900; box-shadow: 0
 <img src="logo4.png" alt="Logo" class="logo" />
 
 <div class="button-row">
-  <button id="btnSpawalniaStart" onclick="potwierdzSpawalnia('START')">ROZPOCZNIJ PRACĘ</button>
-  <button id="btnSpawalniaStop" onclick="potwierdzSpawalnia('STOP')">ZAKOŃCZ PRACĘ</button>
+  <button id="btnSpawalniaStart">ROZPOCZNIJ PRACĘ</button>
+  <button id="btnSpawalniaStop">ZAKOŃCZ PRACĘ</button>
 </div>
 
 <h2 id="projektyNaglowek">WYBIERZ PROJEKT</h2>
@@ -70,8 +77,8 @@ button:active { transform: scale(0.95); background-color: #ff9900; box-shadow: 0
   <option value="PGI Wyspa - 251011003">PGI Wyspa - 251011003</option>
 </select>
 
-<button id="btnStart" onclick="potwierdz('START')">START PROJEKT</button>
-<button id="btnStop" onclick="potwierdz('STOP')">STOP PROJEKT</button>
+<button id="btnStart">START PROJEKT</button>
+<button id="btnStop">STOP PROJEKT</button>
 
 <p id="status"></p>
 <div class="status-box" id="projektInfo"></div>
@@ -91,21 +98,14 @@ let spawalniaActive = false;
 let activeProject = "";
 let manualLoading = false;
 
-// Pobranie userId: z URL lub localStorage (dla PWA)
-function getUserId() {
-  let u = new URLSearchParams(window.location.search).get('u');
-  if (u) { localStorage.setItem('userId', u); return u; }
-  u = localStorage.getItem('userId');
-  if (u) return u;
-  alert("Brak userId w URL ani localStorage!");
-  return "Nieznany";
-}
+// Pobierz userId raz i zapisujemy w localStorage (PWA)
+let userId = localStorage.getItem('userId') || new URLSearchParams(window.location.search).get('u') || 'Nieznany';
+localStorage.setItem('userId', userId);
 
-// Reszta twojego kodu do blokowania przycisków, loading itp.
-function blokujPrzycisk(id){const przycisk=document.getElementById(id);if(przycisk.disabled)return true;przycisk.disabled=true;setTimeout(()=>{przycisk.disabled=false;},15000);return false;}
-function showLoading(show){document.getElementById('loadingScreen').style.display=show?'':'none';}
+// Pokazywanie/ukrywanie ekranu ładowania
+function showLoading(show){ document.getElementById('loadingScreen').classList.toggle('show', show); }
 
-// Status i widoczność przycisków
+// Funkcja aktualizująca widoki
 function showStatus(){
   const info=[];
   if(spawalniaActive) info.push('Pracujesz na projekcie: Spawalnia');
@@ -113,8 +113,8 @@ function showStatus(){
   document.getElementById('projektInfo').innerText=info.join('\n')||'Nie pracujesz na żadnym projekcie';
   document.getElementById('btnSpawalniaStart').style.display=spawalniaActive?'none':'';
   document.getElementById('btnSpawalniaStop').style.display=spawalniaActive?'':'none';
-  const projektyWidoczne = spawalniaActive&&!activeProject;
-  document.getElementById('projektyNaglowek').style.display=projektyWidoczne?'none':'';
+  const projektyWidoczne = spawalniaActive && !activeProject;
+  document.getElementById('projektyNaglowek').style.display=projektyWidoczne?'':'none';
   document.getElementById('projekt').style.display=projektyWidoczne?'':'none';
   document.getElementById('btnStart').style.display=projektyWidoczne?'':'none';
   document.getElementById('btnStop').style.display=(spawalniaActive&&activeProject)?'':'none';
@@ -122,79 +122,89 @@ function showStatus(){
   document.getElementById('btnStop').innerText='STOP PROJEKT';
 }
 
-// fetch status
+// Pobieranie statusu z serwera
 async function fetchStatusAndUpdate(showSpinner=false){
   if(showSpinner||manualLoading) showLoading(true);
-  const userId=getUserId();
   try{
-    const res=await fetch(API_URL+?userId=${encodeURIComponent(userId)});
+    const res=await fetch(API_URL+'?userId='+encodeURIComponent(userId));
     const status=await res.json();
     spawalniaActive=!!status.spawalniaActive;
     activeProject=status.activeProject||"";
     showStatus();
     showLoading(false);
     manualLoading=false;
-  }catch(e){
-    document.getElementById('status').innerText='❌ Błąd pobierania statusu';
-    showLoading(false);
-    manualLoading=false;
-  }
+  }catch(e){ document.getElementById('status').innerText='❌ Błąd pobierania statusu'; showLoading(false); manualLoading=false; }
 }
 
-window.onload=()=>{
-  manualLoading=true;
-  fetchStatusAndUpdate(true);
-  setInterval(()=>fetchStatusAndUpdate(false),10000);
-};
-
-// geolokalizacja + wysyłanie danych
+// Haversine distance
 function haversineDistance(lat1,lon1,lat2,lon2){const R=6371000;const toRad=x=>x*Math.PI/180;const dLat=toRad(lat2-lat1);const dLon=toRad(lon2-lon1);const a=Math.sin(dLat/2)*2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)*2;const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));return R*c;}
+
+// Lokalizacja i zapis danych
 function sprawdzLokalizacjeIZapisz(projekt,akcja,callback){
   showLoading(true);
   navigator.geolocation.getCurrentPosition(position=>{
     const userLat=position.coords.latitude;
     const userLon=position.coords.longitude;
-    const wZasiegu=warsztaty.some(w=>{return haversineDistance(userLat,userLon,w.lat,w.lon)<=500});
-    if(wZasiegu){wyslijDane(projekt,akcja,callback);}
-    else{showLoading(false);document.getElementById('status').innerText='❌ Musisz być na warsztacie';}
-  },error=>{showLoading(false);document.getElementById('status').innerHTML='❌ Wymagana lokalizacja. <br><br><button onclick="location.reload()">Kliknij tutaj, aby spróbować ponownie</button>';});
-}
-async function wyslijDane(projekt,akcja,callback){
-  const uzytkownik=getUserId();
-  try{
-    const dane={id:uzytkownik,projekt,akcja};
-    await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(dane)});
-    document.getElementById('status').innerText='✅ DANE PRZESŁANE';
-    if(typeof callback==='function'){callback();}else{manualLoading=true;await fetchStatusAndUpdate(true);}
-  }catch(e){showLoading(false);document.getElementById('status').innerText='❌ BŁĄD POŁĄCZENIA';}
+    const wZasiegu=warsztaty.some(w=>haversineDistance(userLat,userLon,w.lat,w.lon)<=500);
+    if(wZasiegu) wyslijDane(projekt,akcja,callback);
+    else { showLoading(false); document.getElementById('status').innerText='❌ Musisz być na warsztacie'; }
+  }, error=>{
+    showLoading(false);
+    document.getElementById('status').innerHTML='❌ Wymagana lokalizacja. <br><br><button onclick="location.reload()">Spróbuj ponownie</button>';
+  });
 }
 
-// START/STOP
+// Wysyłanie danych
+async function wyslijDane(projekt,akcja,callback){
+  try{
+    const dane={id:userId,projekt,akcja};
+    await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(dane)});
+    document.getElementById('status').innerText='✅ DANE PRZESŁANE';
+    if(typeof callback==='function') callback();
+    else { manualLoading=true; await fetchStatusAndUpdate(true); }
+  }catch(e){ showLoading(false); document.getElementById('status').innerText='❌ BŁĄD POŁĄCZENIA'; }
+}
+
+// START/STOP PROJEKT
 function potwierdz(akcja){
   const btnId=akcja==='START'?'btnStart':'btnStop';
-  if(blokujPrzycisk(btnId)) return;
+  if(document.getElementById(btnId).disabled) return;
+  document.getElementById(btnId).disabled=true;
+  setTimeout(()=>{document.getElementById(btnId).disabled=false;},15000);
   let projekt;
   if(akcja==='START'){
     projekt=document.getElementById('projekt').value;
-    if(confirm(Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?)){
-      manualLoading=true;sprawdzLokalizacjeIZapisz(projekt,'START');
-    }
+    if(confirm(Czy na pewno chcesz rozpocząć pracę na projekcie "${projekt}"?)) sprawdzLokalizacjeIZapisz(projekt,'START');
   }else{
     projekt=activeProject;
-    if(confirm(Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?)){
-      manualLoading=true;sprawdzLokalizacjeIZapisz(projekt,'STOP');
-    }
+    if(confirm(Czy na pewno chcesz zakończyć pracę na projekcie "${projekt}"?)) sprawdzLokalizacjeIZapisz(projekt,'STOP');
   }
 }
+
+// STOP SPAWALNIA
 function potwierdzSpawalnia(akcja){
   const btnId=akcja==='START'?'btnSpawalniaStart':'btnSpawalniaStop';
-  if(blokujPrzycisk(btnId)) return;
-  if(confirm(Czy na pewno chcesz ${akcja==='START'?'rozpocząć':'zakończyć'} pracę na projekcie "Spawalnia"?)){
-    manualLoading=true;
-    if(akcja==='STOP'&&activeProject){sprawdzLokalizacjeIZapisz(activeProject,'STOP',()=>{sprawdzLokalizacjeIZapisz("Spawalnia",'STOP');});}
-    else{sprawdzLokalizacjeIZapisz("Spawalnia",akcja);}
+  if(document.getElementById(btnId).disabled) return;
+  document.getElementById(btnId).disabled=true;
+  setTimeout(()=>{document.getElementById(btnId).disabled=false;},15000);
+  if(confirm(Czy na pewno chcesz ${akcja==='START'?'rozpocząć':'zakończyć'} pracę na "Spawalnia"?)){
+    if(akcja==='STOP'&&activeProject) sprawdzLokalizacjeIZapisz(activeProject,'STOP',()=>sprawdzLokalizacjeIZapisz("Spawalnia",'STOP'));
+    else sprawdzLokalizacjeIZapisz("Spawalnia",akcja);
   }
 }
+
+// Rejestracja przycisków (bez inline onclick)
+document.getElementById('btnStart').addEventListener('click',()=>potwierdz('START'));
+document.getElementById('btnStop').addEventListener('click',()=>potwierdz('STOP'));
+document.getElementById('btnSpawalniaStart').addEventListener('click',()=>potwierdzSpawalnia('START'));
+document.getElementById('btnSpawalniaStop').addEventListener('click',()=>potwierdzSpawalnia('STOP'));
+
+// Pobierz status przy starcie
+window.onload=()=>{
+  manualLoading=true;
+  fetchStatusAndUpdate(true);
+  setInterval(()=>fetchStatusAndUpdate(false),10000);
+};
 </script>
 </body>
 </html>
