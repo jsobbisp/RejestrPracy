@@ -1,7 +1,7 @@
 {
   "name": "Rejestracja czasu pracy",
   "short_name": "CzasPracy",
-  "start_url": "/index.html",
+  "start_url": "/godziny.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "orange",
